@@ -123,3 +123,20 @@ def generateEdges(self):
 		so look for that if, for instance, your A* tells you to go in a straight line from the start to the end.
 	
 """
+def getHeuristic():
+    pass
+
+#Sets x,y to checked
+#Sets came from in checked neighbors
+#Checks if wall and sets checked status true on walls
+#Returns list of cardinal neighbors
+def getNeighbors(x,y):
+    pass
+
+#returns the distance from the initial pose to the goal pose
+def getDistance(g?):
+    pass
+
+#returns array of PostStamps
+def reconstructPath():
+    pass
