@@ -32,8 +32,8 @@ def publishCells(grid):
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
-    cells.cell_width = 0.05 # edit for grid size .3 for simple map
-    cells.cell_height = 0.05 # edit for grid size
+    cells.cell_width = 0.3 # edit for grid size .3 for simple map
+    cells.cell_height = 0.3 # edit for grid size
 
     for i in range(1,height): #height should be set to hieght of grid
         k=k+1
@@ -42,8 +42,8 @@ def publishCells(grid):
             #print k # used for debugging
             if (grid[k] == 100):
                 point=Point()
-                point.x=j*.05 # edit for grid size
-                point.y=i*.05 # edit for grid size
+                point.x=j*.3 # edit for grid size
+                point.y=i*.3 # edit for grid size
                 point.z=0
                 cells.cells.append(point)
 
