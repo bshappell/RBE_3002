@@ -30,11 +30,14 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
     for i in range(width):
         checkedRow.append(0) # append empty grid cell
     for i in range(height):
-        checked.append(checkedRow)
+        checked.append(checkedRow)#This is where Joe thinks the problem is !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     #print mapInfo[0]
 
-
+    for i in range(10):
+        for z in range(10):
+            checked[z][i] = 0
+            print "x: ", z, "y: ", i, "checked: ", checked[z][i]
     # calculate out heursitics at each coordinate
     mapInfo = getHeuristic(mapInfo, xEnd, yEnd, width, height)
 
@@ -49,7 +52,17 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
     # add starting square to frontier
     frontier.put((curr_f, (curr_x, curr_y)))
-    updateChecked(curr_x, curr_y, checked, 3)    
+    print"BLOCKSDFSDFSDFDFDFSDFLKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::;"
+    for i in range(10):
+        for z in range(10):
+            print "x: ", z, "y: ", i, "checked: ", checked[z][i]
+    print "curr_x ", curr_x, " curr_y ", curr_y
+    checked = updateChecked(curr_x, curr_y, checked, 3)    
+    print"BLOCKSDFSDFSDFDFDFSDFLKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::;"
+    for i in range(10):
+        for z in range(10):
+            print "x: ", z, "y: ", i, "checked: ", checked[z][i]
+    
 
     '''print "frontier info"
     print frontier[0].x
@@ -76,6 +89,9 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
         neighbors = getNeighbors(curr_x, curr_y) # re-evaluate each neighboring node
         #print "checked val1: ", mapInfo[curr_x][curr_y].checked
         # add from frontier
+        for i in range(10):
+            for z in range(10):
+                print "x: ", z, "y: ", i, "checked: ", checked[z][i]
         for neighbor in neighbors:
             new_x, new_y = neighbor 
             #if in bounds (equal to zero less than width)
@@ -88,7 +104,7 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
 				    #set the came from value for the new cell
 	    	    mapInfo[new_x][new_y].cameFrom = (curr_x, curr_y)
 				    #set the cell checked value as frontier
-		    updateChecked(new_x, new_y, checked, 3) #mapInfo[new_x][new_y].check = 3
+		    checked = updateChecked(new_x, new_y, checked, 3) #mapInfo[new_x][new_y].check = 3
 				    # set the g value to the g value of the parent node plus one
 		    mapInfo[new_x][new_y].g =mapInfo[curr_x][curr_y].g + 1 
 				#append the new cell to the frontierList
@@ -102,7 +118,7 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
 	                mapInfo[new_x][new_y].cameFrom = (curr_x, curr_y)
 
         if(checked[curr_x][curr_y] == 3):        
-            updateChecked(curr_x, curr_y, checked, 1) #mapInfo[curr_x][curr_y].check = 1
+            checked = updateChecked(curr_x, curr_y, checked, 1) #mapInfo[curr_x][curr_y].check = 1
 
     # print values of checked
     for i in range(10):
@@ -113,9 +129,10 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
 def updateChecked(x_val, y_val, checked, checkedVal):
     checked[x_val][y_val] = checkedVal
+    print"checked a neighbor"
     if((x_val != 4) and (checkedVal == 1)):
         print "ERRRRRRRRRRRRRR MYYYYYYYYYYYYYYYYYY GERRRRRRRRRRRRRRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
-
+    return checked
 #mapInfo, is list of list of GridSquares
 def getHeuristic(mapInfo, xEnd, yEnd, width, height):
     
