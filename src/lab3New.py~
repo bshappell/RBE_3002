@@ -116,7 +116,7 @@ if __name__ == '__main__':
     global wallpub
     xInit = 4
     yInit = 6
-    xEnd = 5
+    xEnd = 6
     yEnd = 6
     width = 10
     height = 10

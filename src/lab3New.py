@@ -117,7 +117,7 @@ if __name__ == '__main__':
     xInit = 4
     yInit = 6
     xEnd = 5
-    yEnd = 6
+    yEnd = 5
     width = 10
     height = 10
 
