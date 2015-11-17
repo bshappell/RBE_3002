@@ -24,6 +24,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
     global yEnd
     global xInit
     global yInit
+    global mapInfo
 
     xInit = ixInit
     yInit = iyInit
@@ -46,23 +47,28 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
 
     # calculate out heursitics at each coordinate
-    mapInfo = getHeuristic(mapInfo)
+    getHeuristic()
 
 	# starting x and y are the current coordinates
     curr_x = xInit
     curr_y = yInit
 
     # Determine current f value
+    print "h and g"
+    print mapInfo[curr_x][curr_y].h,  mapInfo[curr_x][curr_y].g
     curr_f = mapInfo[curr_x][curr_y].h + mapInfo[curr_x][curr_y].g
 
     # add starting square to frontier
     frontier.append(FrontierSquare(curr_x, curr_y, curr_f))
     print "frontier info"
     print frontier[0].x
+    print frontier[0].y
+    print frontier[0].f
 
     while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
 	
         currentSquare = frontier[0] # this is the most promising node of all nodes in the open set
+        print "cur_x ", curr_x, " curr_y ", curr_y
         frontier.remove(currentSquare) # remove currentSquare from the frontier
         
         curr_x = currentSquare.x
@@ -70,40 +76,40 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
         if (curr_x == xEnd) and (curr_y == yEnd): # if the best possible path found leads to the goal, it is the best possible path that the robot could discover
             print("goal reached")            
-            return reconstruct_path(came_from, goal)
+            return reconstructPath(mapInfo)
          
-        neighbors = getNeighbors(currentSquare, mapInfo) # re-evaluate each neighboring node
+        neighbors = getNeighbors(currentSquare) # re-evaluate each neighboring node
         
         # add from frontier
         for neighbor in neighbors:
             frontier.append(neighbor)
 
         # sort frontierList by f (g(s) + h(s))        
-        frontier.sort(key=lambda x: x.f)
+        frontier.sort(key=lambda cell: cell.f)
     print "failure" 
     return -1 #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
 
 
 #mapInfo, is list of list of GridSquares
-def getHeuristic(mapInfo):
+def getHeuristic():
     global xEnd
     global yEnd
     global width
     global height
 
     for x in range(width):
-		for y in range(height):
-			xDist = xEnd - x
-			yDist = yEnd - y
-			mapInfo[x][y].h = math.sqrt((xDist**2) + (yDist**2))
+	for y in range(height):
+	    xDist = xEnd - x
+	    yDist = yEnd - y
+	    mapInfo[x][y].h = math.sqrt((xDist**2) + (yDist**2))
 
-	return mapInfo
+
 
 #Sets x,y to checked
 #Sets came from in checked neighbors
 #Checks if wall and sets checked status true on walls
 #Returns list of cardinal neighbors tuple
-def getNeighbors(currentCell, mapInfo):
+def getNeighbors(currentCell):
 	global width
 	global height
 	#print "width"
@@ -122,8 +128,8 @@ def getNeighbors(currentCell, mapInfo):
 		new_y = currentCell.y + delta_y[i]
 		#if in bounds (equal to zero less than width)
 		if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
-                    print new_x
-                    print new_y
+                    #print "new_x ", new_x, " new_y ",new_y
+                    #print "cell x ", currentCell.x, " cell y ", currentCell.y
 			#if the neighbor cell has not been checked
 		    if mapInfo[new_x][new_y].checked == 0:
 				#set the came from value for the new cell
@@ -145,12 +151,12 @@ def getNeighbors(currentCell, mapInfo):
 
 #returns the distance from the initial pose to the current position
 #looks at where the neighbor came from and then adds one to that g value
-def getDistance(currentCell, mapInfo):
+def getDistance(currentCell):
 
 	return 1
 
 #returns array of PoseStamps
-def reconstructPath(mapInfo):
+def reconstructPath():
 	global xInit
 	global yInit
 	global yEnd
@@ -159,13 +165,12 @@ def reconstructPath(mapInfo):
 	Path = []
 	currentCell = (xEnd, yEnd)
 
-	while currentCell[0] != xInit or currentCel[1] != yInit:
+	while currentCell[0] != xInit or currentCell[1] != yInit:
 		nextCell = mapInfo[currentCell[0]][currentCell[1]].cameFrom
 		Path.append(currentCell)
 		currentCell = nextCell
 
     #if we have reached the end
-        print path
 	return Path
 
 #locate WayPoints
@@ -188,7 +193,7 @@ def locateWayPoints(Path):
 	return listWayPoints
 	
 #make a list of A star grids to be printed
-def makeList(mapInfo):
+def makeList():
 	global height
 	global width
 

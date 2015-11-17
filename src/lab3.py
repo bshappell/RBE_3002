@@ -114,8 +114,8 @@ if __name__ == '__main__':
     global width
     global height
     global wallpub
-    xInit = 2
-    yInit = 2
+    xInit = 5
+    yInit = 6
     xEnd = 4
     yEnd = 3
     width = 10
@@ -131,8 +131,8 @@ if __name__ == '__main__':
     sub = rospy.Subscriber("/initialPose1", PoseWithCovarianceStamped, startCallBack)
     mapsub = rospy.Subscriber("/map", OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/grid_walls", GridCells, queue_size=1)
-    cellPub = rospy.Publisher('/cell_path', GridCells)
-    pathPub = rospy.Publisher('/path_path', Path)
+    cellPub = rospy.Publisher('/cell_path', GridCells, queue_size=1)
+    pathPub = rospy.Publisher('/path_path', Path, queue_size=1)
 
     target = 0
     start = 0
