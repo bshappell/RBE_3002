@@ -48,7 +48,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
 
     # calculate out heursitics at each coordinate
-    getHeuristic(mapInfo)
+    mapInfo = getHeuristic(mapInfo)
 
 	# starting x and y are the current coordinates
     curr_x = xInit
@@ -98,6 +98,8 @@ def getHeuristic(mapInfo):
 			xDist = xEnd - x
 			yDist = yEnd - y
 			mapInfo[x][y].h = math.sqrt((xDist**2) + (yDist**2))
+
+	return mapInfo
 
 #Sets x,y to checked
 #Sets came from in checked neighbors
@@ -150,23 +152,75 @@ def getDistance(currentCell, mapInfo):
 	return 1
 
 #returns array of PoseStamps
-def reconstructPath(goalCell, mapInfo):
+def reconstructPath(mapInfo):
 	global xInit
 	global yInit
+	global yEnd
+	global xEnd
 
 	Path = []
-	currentCell = goalCell
+	currentCell = (xEnd, yEnd)
 
-	while currentCell.x != xInit or currentCel.y != yInit:
-		nextCell = mapInfo[currentCell.x][currentCell.y].cameFrom
+	while currentCell[0] != xInit or currentCel[1] != yInit:
+		nextCell = mapInfo[currentCell[0]][currentCell[1]].cameFrom
 		Path.append(currentCell)
 		currentCell = nextCell
 
     #if we have reached the end
 	return Path
 
+#locate WayPoints
+def locateWayPoints(Path):
+	
+	lengthOfList = len(Path)
+
+	listWayPoints =  []
+
+	for i in range(0, lengthOfList):
+		xFirst = Path[i][0]
+		yFirst = Path[i][1]
+		
+		xThird = Path[i + 2][0]
+		yThird = Path[i + 2][1]
+
+		if sqrt((yThird-yFirst)**2 + (yThird - yFirst)**2) > 2:
+			listWayPoints.append(Path[i +1])
+
+	return listWayPoints
+	
+#make a list of A star grids to be printed
+def makeList(mapInfo):
+	global height
+	global width
+
+	gridList = []
 
 	
+	for y in range(height):
+            for x in range(width):
+		girdList.append(mapInfo[x][y].checked)
+
+
+	return gridList
+
+
+#make a list to print the final path 
+def makePathList(Path):
+	global height
+	global width
+
+	pathList = []
+
+	
+	for y in range(height):
+            for x in range(width):
+		for i in range(len(Path)):
+		    if( y == Path[i][1] and x == Path[i][0]):
+			pathList.append(50)
+		    else:
+			pathList.append(0)
+
+	return pathList
 
 
 

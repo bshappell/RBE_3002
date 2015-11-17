@@ -48,7 +48,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
 
     # calculate out heursitics at each coordinate
-    getHeuristic(mapInfo)
+    mapInfo = getHeuristic(mapInfo)
 
 	# starting x and y are the current coordinates
     curr_x = xInit
@@ -98,6 +98,8 @@ def getHeuristic(mapInfo):
 			xDist = xEnd - x
 			yDist = yEnd - y
 			mapInfo[x][y].h = math.sqrt((xDist**2) + (yDist**2))
+
+	return mapInfo
 
 #Sets x,y to checked
 #Sets came from in checked neighbors
