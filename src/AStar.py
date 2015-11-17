@@ -32,8 +32,6 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
     width = iwidth
     height = iheight
 
-    print xInit
-    print yInit
 
     frontier = [] # list of frontier squares 
 
@@ -44,7 +42,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
     for i in range(width):
         mapInfo.append(row)
 
-    print mapInfo[0]
+    #print mapInfo[0]
 
 
     # calculate out heursitics at each coordinate
@@ -82,7 +80,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
         # sort frontierList by f (g(s) + h(s))        
         frontier.sort(key=lambda x: x.f)
- 
+    print "failure" 
     return -1 #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
 
 
@@ -167,6 +165,7 @@ def reconstructPath(mapInfo):
 		currentCell = nextCell
 
     #if we have reached the end
+        print path
 	return Path
 
 #locate WayPoints
