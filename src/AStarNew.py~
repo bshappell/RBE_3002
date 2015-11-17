@@ -2,7 +2,7 @@
 
 import math 
 import numpy
-from Queue import PriorityQueue
+import Queue
 class GridSquare:
     def __init__(self, checked, h, g, cameFrom):
         self.checked = checked # 0 = unchecked, 1 = checked, 2 = wall,  3 = frontier
@@ -12,7 +12,7 @@ class GridSquare:
 
 
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
-def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
+def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
     frontier = Queue.PriorityQueue()
 
@@ -54,38 +54,40 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
         #frontier.remove(currentSquare) # remove currentSquare from the frontier
         _ , point = currentSquare
         curr_x, curr_y = point
+        print "curr_x: ", curr_x, "curr_y: ", curr_y
 
-        mapInfo[currentCell.x][currentCell.y].checked = 1
+        mapInfo[curr_x][curr_y].checked = 1
 
         if (curr_x == xEnd) and (curr_y == yEnd): # if the best possible path found leads to the goal, it is the best possible path that the robot could discover
             print("goal reached")            
             return reconstructPath(mapInfo, xInit, yInit, xEnd, yEnd)
          
-        neighbors = getNeighbors(currentSquare) # re-evaluate each neighboring node
+        neighbors = getNeighbors(curr_x, curr_y) # re-evaluate each neighboring node
         
         # add from frontier
         for neighbor in neighbors:
             new_x, new_y = neighbor 
             #if in bounds (equal to zero less than width)
-		    if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
-                    #print "new_x ", new_x, " new_y ",new_y
-                    #print "cell x ", currentCell.x, " cell y ", currentCell.y
-			#if the neighbor cell has not been checked
-		        if mapInfo[new_x][new_y].checked == 0:
+	    if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
+                print "astar_new_x ", new_x, "astar_new_y ",new_y
+                #print "cell x ", currentCell.x, " cell y ", currentCell.y
+		#if the neighbor cell has not been checked
+		if mapInfo[new_x][new_y].checked == 0:
 				    #set the came from value for the new cell
-	    	        mapInfo[new_x][new_y].cameFrom = (curr_x, curr_y)
+	    	    mapInfo[new_x][new_y].cameFrom = (curr_x, curr_y)
 				    #set the cell checked value as frontier
-			        mapInfo[new_x][new_y].checked = 3
+		    mapInfo[new_x][new_y].checked = 3
 				    # set the g value to the g value of the parent node plus one
-			        mapInfo[new_x][new_y].g =mapInfo[currentCell.x][currentCell.y].g + 1 
+		    mapInfo[new_x][new_y].g =mapInfo[curr_x][curr_y].g + 1 
 				#append the new cell to the frontierList
-			        frontier.put((mapInfo[new_x][new_y].g+mapInfo[new_x][new_y].h, (new_x, new_y)))
+               	    print "added x: ", new_x, "added_y: ", new_y
+		    frontier.put((mapInfo[new_x][new_y].g+mapInfo[new_x][new_y].h, (new_x, new_y)))
                         #print mapInfo[new_x][new_y]
-                    elif((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
-                        tentative_g = mapInfo[currentCell.x][currentCell.y].g + 1
-                        if tentative_g < mapInfo[new_x][new_y].g:
-	                    mapInfo[new_x][new_y].g = tentative_g
-	                    mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
+                elif((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
+                    tentative_g = mapInfo[curr_x][curr_y].g + 1
+                    if tentative_g < mapInfo[new_x][new_y].g:
+	                mapInfo[new_x][new_y].g = tentative_g
+	                mapInfo[new_x][new_y].cameFrom = (curr_x, curr_y)
 
     print "failure" 
     return -1 #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
@@ -113,21 +115,22 @@ def getHeuristic(mapInfo, xEnd, yEnd, width, height):
 #Sets came from in checked neighbors
 #Checks if wall and sets checked status true on walls
 #Returns list of cardinal neighbors tuple
-def getNeighbors(currentCell):
+def getNeighbors(curr_x, curr_y):
 
     neighbors = []
 	
     #check neighbor to north
-	delta_x = [0,1,0,-1]
-	delta_y = [1,0,-1,0]
-
-	for i in range(4):
-		new_x = currentCell.x + delta_x[i]
-		new_y = currentCell.y + delta_y[i]
+    delta_x = [0,1,0,-1]
+    delta_y = [1,0,-1,0]
+    print "neighbors x: ", curr_x, "neighbors y: ", curr_y
+    for i in range(4):
+        new_x = curr_x + delta_x[i]
+	new_y = curr_y + delta_y[i]
         point = (new_x,new_y)
-                #print "new_x ", new_x, "new_y ",new_y
+	neighbors.append(point)
+        print "new_x ", new_x, "new_y ",new_y
 		
-	return neighbors
+    return neighbors
 
 #returns the distance from the initial pose to the current position
 #looks at where the neighbor came from and then adds one to that g value

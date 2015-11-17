@@ -2,7 +2,7 @@
 
 import math 
 import numpy
-from Queue import PriorityQueue
+import Queue
 class GridSquare:
     def __init__(self, checked, h, g, cameFrom):
         self.checked = checked # 0 = unchecked, 1 = checked, 2 = wall,  3 = frontier
@@ -12,7 +12,7 @@ class GridSquare:
 
 
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
-def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
+def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
     frontier = Queue.PriorityQueue()
 
@@ -54,8 +54,9 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
         #frontier.remove(currentSquare) # remove currentSquare from the frontier
         _ , point = currentSquare
         curr_x, curr_y = point
+        print "curr_x: ", curr_x, "curr_y: ", curr_y
 
-        mapInfo[currentCell.x][currentCell.y].checked = 1
+        mapInfo[curr_x][curr_y].checked = 1
 
         if (curr_x == xEnd) and (curr_y == yEnd): # if the best possible path found leads to the goal, it is the best possible path that the robot could discover
             print("goal reached")            
@@ -68,7 +69,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
             new_x, new_y = neighbor 
             #if in bounds (equal to zero less than width)
 	    if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
-                print "new_x ", new_x, " new_y ",new_y
+                print "astar_new_x ", new_x, "astar_new_y ",new_y
                 #print "cell x ", currentCell.x, " cell y ", currentCell.y
 		#if the neighbor cell has not been checked
 		if mapInfo[new_x][new_y].checked == 0:
@@ -79,6 +80,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 				    # set the g value to the g value of the parent node plus one
 		    mapInfo[new_x][new_y].g =mapInfo[curr_x][curr_y].g + 1 
 				#append the new cell to the frontierList
+               	    print "added x: ", new_x, "added_y: ", new_y
 		    frontier.put((mapInfo[new_x][new_y].g+mapInfo[new_x][new_y].h, (new_x, new_y)))
                         #print mapInfo[new_x][new_y]
                 elif((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
@@ -87,6 +89,10 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 	                mapInfo[new_x][new_y].g = tentative_g
 	                mapInfo[new_x][new_y].cameFrom = (curr_x, curr_y)
 
+    # print values of checked
+    for i in range(10):
+        for z in range(10):
+            print "x: ", z, "y: ", i, "checked: ", mapInfo[z][i].checked
     print "failure" 
     return -1 #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
 
@@ -120,13 +126,13 @@ def getNeighbors(curr_x, curr_y):
     #check neighbor to north
     delta_x = [0,1,0,-1]
     delta_y = [1,0,-1,0]
-
+    print "neighbors x: ", curr_x, "neighbors y: ", curr_y
     for i in range(4):
         new_x = curr_x + delta_x[i]
 	new_y = curr_y + delta_y[i]
         point = (new_x,new_y)
 	neighbors.append(point)
-        #print "new_x ", new_x, "new_y ",new_y
+        print "new_x ", new_x, "new_y ",new_y
 		
     return neighbors
 

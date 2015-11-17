@@ -165,7 +165,7 @@ if __name__ == '__main__':
         print "end pose"
         print xEnd
         print yEnd
-        AStar(xInit, yInit, xEnd, yEnd, width, height)
+        AStarNew.AStar(xInit, yInit, xEnd, yEnd, width, height)
         print "goal reached!!!"
         print xEnd
         print yEnd
