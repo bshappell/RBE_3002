@@ -59,11 +59,13 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
     # add starting square to frontier
     frontier.append(FrontierSquare(curr_x, curr_y, curr_f))
+    print "frontier info"
+    print frontier[0].x
 
     while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
 	
         currentSquare = frontier[0] # this is the most promising node of all nodes in the open set
-        frontier = frontier[1:len(frontier)] # remove currentSquare from the frontier
+        frontier.remove(currentSquare) # remove currentSquare from the frontier
         
         curr_x = currentSquare.x
         curr_y = currentSquare.y
@@ -73,11 +75,12 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
             return reconstruct_path(came_from, goal)
          
         neighbors = getNeighbors(currentSquare, mapInfo) # re-evaluate each neighboring node
-
+        
         # add from frontier
-        frontier.append(neighbors)
+        for neighbor in neighbors:
+            frontier.append(neighbor)
 
-        # sort frontierList by f (g(s) + h(s))
+        # sort frontierList by f (g(s) + h(s))        
         frontier.sort(key=lambda x: x.f)
  
     return failure #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
@@ -113,8 +116,7 @@ def getNeighbors(currentCell, mapInfo):
 
 	for i in range(len(delta_x)):
 		new_x = currentCell.x + delta_x[i]
-		new_y = currentCell.y + delta_y[i]
-
+		new_y = currentCell.y + delta_y[
 		#if in bounds (equal to zero less than width)
 		if 0 <= new_x < width and 0 <= new_y < height:
 			#if the neighbor cell has not been checked

@@ -59,11 +59,13 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
     # add starting square to frontier
     frontier.append(FrontierSquare(curr_x, curr_y, curr_f))
+    print "frontier info"
+    print frontier[0].x
 
     while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
 	
         currentSquare = frontier[0] # this is the most promising node of all nodes in the open set
-        frontier = frontier[1:len(frontier)] # remove currentSquare from the frontier
+        frontier.remove(currentSquare) # remove currentSquare from the frontier
         
         curr_x = currentSquare.x
         curr_y = currentSquare.y
@@ -73,12 +75,13 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
             return reconstruct_path(came_from, goal)
          
         neighbors = getNeighbors(currentSquare, mapInfo) # re-evaluate each neighboring node
-
+        
         # add from frontier
-        frontier.append(neighbor)
+        for neighbor in neighbors:
+            frontier.append(neighbor)
 
-        # sort frontierList by f (g(s) + h(s))
-        frontier.sort(key=lambda state: state.f)
+        # sort frontierList by f (g(s) + h(s))        
+        frontier.sort(key=lambda x: x.f)
  
     return failure #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
 
@@ -94,9 +97,7 @@ def getHeuristic(mapInfo):
 		for y in range(height):
 			xDist = xEnd - x
 			yDist = yEnd - y
-            dist = xDist** 2 - yDist**2
-            print dist
-			mapInfo[x][y].h = math.sqrt(dist)
+			mapInfo[x][y].h = math.sqrt((xDist**2) + (yDist**2))
 
 #Sets x,y to checked
 #Sets came from in checked neighbors
@@ -105,7 +106,7 @@ def getHeuristic(mapInfo):
 def getNeighbors(currentCell, mapInfo):
 	global width
 	global height
-	
+	print currentCell.y
 	#set current cell to checked
 	mapInfo[currentCell.x][currentCell.y].checked = 1
     #check neighbor to north
@@ -114,26 +115,25 @@ def getNeighbors(currentCell, mapInfo):
 	frontierList = []
 
 	for i in range(len(delta_x)):
-		new_x = cuurentCell.x + delta_x[i]
+		new_x = currentCell.x + delta_x[i]
 		new_y = currentCell.y + delta_y[i]
-
 		#if in bounds (equal to zero less than width)
 		if 0 <= new_x < width and 0 <= new_y < height:
 			#if the neighbor cell has not been checked
 			if mapInfo[new_x][new_y].checked == 0:
 				#set the came from value for the new cell
-				'''mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
+				mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
 				#set the cell checked value as frontier
 				mapInfo[new_x][new_y].checked = 3
 				# set the g value to the g value of the parent node plus one
 				mapInfo[new_x][new_y].g =mapInfo[currentCell.x][currentCell.y].g + 1 
 				#append the new cell to the frontierList
 				frontierList.append(FrontierSquare(new_x, new_y, 0))
-	            #((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
-	                tentative_g = manInfo[currentCell.x][currentCell.y].g + 1
-	                if tentative_g < mapInfo[new_x][new_y].g:
+                elif((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
+                    tentative_g = mapInfo[currentCell.x][currentCell.y].g + 1
+                    if tentative_g < mapInfo[new_x][new_y].g:
 	                    mapInfo[new_x][new_y].g = tentative_g
-	                    mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)'''
+	                    mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
 
 	#return a list FrontierSquares
 	return frontierList
