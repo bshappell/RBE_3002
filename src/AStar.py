@@ -159,7 +159,7 @@ def reconstructPath(mapInfo):
 	Path = []
 	currentCell = (xEnd, yEnd)
 
-	while currentCell[0] != xInit or currentCel[1] != yInit
+	while currentCell[0] != xInit or currentCel[1] != yInit:
 		nextCell = mapInfo[currentCell[0]][currentCell[1]].cameFrom
 		Path.append(currentCell)
 		currentCell = nextCell
@@ -172,7 +172,7 @@ def locateWayPoints(Path):
 	
 	lengthOfList = len(Path)
 
-	listWayPoints []
+	listWayPoints =  []
 
 	for i in range(0, lengthOfList):
 		xFirst = Path[i][0]
@@ -191,12 +191,12 @@ def makeList(mapInfo):
 	global height
 	global width
 
-	gridList []
+	gridList = []
 
 	
 	for y in range(height):
-        for x in range(width):
-			girdList.append(mapInfo[x][y].checked)
+            for x in range(width):
+		girdList.append(mapInfo[x][y].checked)
 
 
 	return gridList
@@ -207,16 +207,16 @@ def makePathList(Path):
 	global height
 	global width
 
-	pathList []
+	pathList = []
 
 	
 	for y in range(height):
-        for x in range(width):
-			for i in range(len(Path)):
-				if( y == Path[i][1] and x == Path[i][0]):
-					pathList.append(50)
-				else:
-					pathList.append(0)
+            for x in range(width):
+		for i in range(len(Path)):
+		    if( y == Path[i][1] and x == Path[i][0]):
+			pathList.append(50)
+		    else:
+			pathList.append(0)
 
 	return pathList
 

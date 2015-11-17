@@ -127,8 +127,8 @@ if __name__ == '__main__':
 
     rospy.init_node('lab3')
     worldMapSub = rospy.Subscriber('/map', OccupancyGrid, readWorldMap)
-    markerSub = rospy.Subscriber('/move_base_simple/goal', PoseStamped, readGoal)
-    sub = rospy.Subscriber("/initialPose", PoseWithCovarianceStamped, startCallBack)
+    markerSub = rospy.Subscriber('/move_base_simple/goal1', PoseStamped, readGoal)
+    sub = rospy.Subscriber("/initialPose1", PoseWithCovarianceStamped, startCallBack)
     mapsub = rospy.Subscriber("/map", OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/grid_walls", GridCells, queue_size=1)
     cellPub = rospy.Publisher('/cell_path', GridCells)
@@ -155,11 +155,20 @@ if __name__ == '__main__':
     # do not stop publishing
 
 
-    while not rospy.is_shutdown():
+    while 1 and not rospy.is_shutdown():
         print("starting")
         rospy.sleep(1)
         publishCells(mapData) #publishing map data every 2 seconds
+        print "start pose"
+        print xInit
+        print yInit
+        print "end pose"
+        print xEnd
+        print yEnd
         AStar(xInit, yInit, xEnd, yEnd, width, height)
+        print "goal reached!!!"
+        print xEnd
+        print yEnd
         print("complete")
         rospy.loginfo("Complete")
         rospy.spin() 
