@@ -83,7 +83,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
         # sort frontierList by f (g(s) + h(s))        
         frontier.sort(key=lambda x: x.f)
  
-    return failure #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
+    return -1 #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
 
 
 #mapInfo, is list of list of GridSquares
@@ -106,7 +106,10 @@ def getHeuristic(mapInfo):
 def getNeighbors(currentCell, mapInfo):
 	global width
 	global height
-	
+	#print "width"
+        #print width
+        #print "height"
+        #print height
 	#set current cell to checked
 	mapInfo[currentCell.x][currentCell.y].checked = 1
     #check neighbor to north
@@ -116,22 +119,24 @@ def getNeighbors(currentCell, mapInfo):
 
 	for i in range(len(delta_x)):
 		new_x = currentCell.x + delta_x[i]
-		new_y = currentCell.y + delta_y[
+		new_y = currentCell.y + delta_y[i]
 		#if in bounds (equal to zero less than width)
-		if 0 <= new_x < width and 0 <= new_y < height:
+		if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
+                    print new_x
+                    print new_y
 			#if the neighbor cell has not been checked
-			if mapInfo[new_x][new_y].checked == 0:
+		    if mapInfo[new_x][new_y].checked == 0:
 				#set the came from value for the new cell
-				mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
+	    	        mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
 				#set the cell checked value as frontier
-				mapInfo[new_x][new_y].checked = 3
+			mapInfo[new_x][new_y].checked = 3
 				# set the g value to the g value of the parent node plus one
-				mapInfo[new_x][new_y].g =mapInfo[currentCell.x][currentCell.y].g + 1 
+			mapInfo[new_x][new_y].g =mapInfo[currentCell.x][currentCell.y].g + 1 
 				#append the new cell to the frontierList
-				frontierList.append(FrontierSquare(new_x, new_y, 0))
-                elif((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
-                    tentative_g = mapInfo[currentCell.x][currentCell.y].g + 1
-                    if tentative_g < mapInfo[new_x][new_y].g:
+			frontierList.append(FrontierSquare(new_x, new_y, 0))
+                    elif((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
+                        tentative_g = mapInfo[currentCell.x][currentCell.y].g + 1
+                        if tentative_g < mapInfo[new_x][new_y].g:
 	                    mapInfo[new_x][new_y].g = tentative_g
 	                    mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
 

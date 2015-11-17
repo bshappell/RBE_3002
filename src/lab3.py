@@ -57,7 +57,50 @@ def startCallBack(data):
     xInit = px
     yInit = py
     thetaInit = yaw * 180.0 / math.pi
+
+
+# reads in map data
+def mapCallBack(data):
+    global mapData, grid
+    global width
+    global height
+    global mapgrid
+    mapgrid = data
+    mapData = data.data
+    width = data.info.width
+    height = data.info.height
+    #print data.info # used for debugging
+    #publishCells(mapgrid.data) # used for debugging
 	
+def publishCells(grid):
+    global wallpub
+    print "publishing"
+    k=0
+    cells = GridCells()
+    cells.header.frame_id = 'map'
+    cells.cell_width = 0.3 # edit for grid size .3 for simple map
+    cells.cell_height = 0.3 # edit for grid size
+
+    for i in range(1,height): #height should be set to hieght of grid
+        for j in range(1,width): #height should be set to hieght of grid
+            #print k # used for debugging
+            if (grid[k] == 100):
+                point=Point()
+                point.x=j*.3+.32 # edit for grid size
+                point.y=i*.3-.15 # edit for grid size
+                point.z=0
+                cells.cells.append(point)
+            k=k+1
+        k=k+1
+        if (grid[k] == 100):
+            point=Point()
+            point.x=j*.3+.62 # edit for grid size
+            point.y=i*.3-.15 # edit for grid size
+            point.z=0
+            cells.cells.append(point)
+
+    #print cells # used for debugging
+    wallpub.publish(cells)           
 	
 
 if __name__ == '__main__':
@@ -70,6 +113,7 @@ if __name__ == '__main__':
     global yEnd
     global width
     global height
+    global wallpub
     xInit = 0
     yInit = 0
     xEnd = 10
@@ -85,6 +129,8 @@ if __name__ == '__main__':
     worldMapSub = rospy.Subscriber('/map', OccupancyGrid, readWorldMap)
     markerSub = rospy.Subscriber('/move_base_simple/goal', PoseStamped, readGoal)
     sub = rospy.Subscriber("/initialPose", PoseWithCovarianceStamped, startCallBack)
+    mapsub = rospy.Subscriber("/map", OccupancyGrid, mapCallBack)
+    wallpub = rospy.Publisher("/grid_walls", GridCells, queue_size=1)
     cellPub = rospy.Publisher('/cell_path', GridCells)
     pathPub = rospy.Publisher('/path_path', Path)
 
@@ -112,6 +158,7 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         print("starting")
         rospy.sleep(1)
+        publishCells(mapData) #publishing map data every 2 seconds
         AStar(xInit, yInit, xEnd, yEnd, width, height)
         print("complete")
         rospy.loginfo("Complete")
