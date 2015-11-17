@@ -24,8 +24,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
     global yEnd
     global xInit
     global yInit
-    global mapInfo
-
+    global frontier
     xInit = ixInit
     yInit = iyInit
     xEnd = ixEnd
@@ -38,9 +37,9 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
     mapInfo = [] # 2d array of grid square info
     row = []
-    for i in range(height):
-        row.append(GridSquare(0, 0, 0, (0,0))) # append empty grid cell
     for i in range(width):
+        row.append(GridSquare(0, 0, 0, (0,0))) # append empty grid cell
+    for i in range(height):
         mapInfo.append(row)
     print "width", len(mapInfo)
     print "height", len(mapInfo[0])
@@ -49,7 +48,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
 
     # calculate out heursitics at each coordinate
-    #getHeuristic()
+    mapInfo = getHeuristic(mapInfo)
 
 	# starting x and y are the current coordinates
     curr_x = xInit
@@ -70,7 +69,7 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
     while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
 	
         currentSquare = frontier[0] # this is the most promising node of all nodes in the open set
-        print "cur_x ", curr_x, " curr_y ", curr_y
+        print "cur_x ", curr_x, " curr_y ", curr_y, "ends", xEnd,yEnd
         frontier.remove(currentSquare) # remove currentSquare from the frontier
         
         curr_x = currentSquare.x
@@ -80,14 +79,14 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
             print("goal reached")            
             return reconstructPath()
          
-        neighbors = getNeighbors(currentSquare) # re-evaluate each neighboring node
+        mapInfo = getNeighbors(currentSquare, mapInfo) # re-evaluate each neighboring node
         
         # add from frontier
-        for neighbor in neighbors:
+        '''for neighbor in neighbors:
             frontier.append(neighbor)
-            print neighbor.x
-            print neighbor.y
-            print neighbor.f
+            print "neighbor x ", neighbor.x
+            print "neighbor y ", neighbor.y
+            print neighbor.f'''
         # sort frontierList by f (g(s) + h(s))        
         frontier.sort(key=lambda cell: cell.f)
     print "failure" 
@@ -95,12 +94,12 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
 
 #mapInfo, is list of list of GridSquares
-def getHeuristic():
+def getHeuristic(mapInfo):
     global xEnd
     global yEnd
     global width
     global height
-    global mapInfo
+    
 
     for x in range(width):
 	for y in range(height):
@@ -108,21 +107,22 @@ def getHeuristic():
 	    yDist = yEnd - y
             print "xDist ", xDist, " yDist ", yDist, " x ", x, " y ", y
 	    #print math.sqrt((xDist**2) + (yDist**2))
+	    #print mapInfo[x][y].h
+	    mapInfo[x][y].h = abs(xDist) + abs(yDist)#math.sqrt((xDist**2) + (yDist**2))
 	    print mapInfo[x][y].h
-	    mapInfo[x][y].h = math.sqrt((xDist**2) + (yDist**2))
 
     #print "map h", mapInfo.h
     #print (math.sqrt(2**2 + 4**2))
 
-
+    return mapInfo
 #Sets x,y to checked
 #Sets came from in checked neighbors
 #Checks if wall and sets checked status true on walls
 #Returns list of cardinal neighbors tuple
-def getNeighbors(currentCell):
+def getNeighbors(currentCell,mapInfo):
 	global width
 	global height
-        global mapInfo
+        global frontier
 	#print "width"
         #print width
         #print "height"
@@ -137,7 +137,7 @@ def getNeighbors(currentCell):
 	for i in range(4):
 		new_x = currentCell.x + delta_x[i]
 		new_y = currentCell.y + delta_y[i]
-                print "new_x ", new_x, "new_y ",new_y
+                #print "new_x ", new_x, "new_y ",new_y
 		#if in bounds (equal to zero less than width)
 		if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
                     #print "new_x ", new_x, " new_y ",new_y
@@ -151,8 +151,8 @@ def getNeighbors(currentCell):
 				# set the g value to the g value of the parent node plus one
 			mapInfo[new_x][new_y].g =mapInfo[currentCell.x][currentCell.y].g + 1 
 				#append the new cell to the frontierList
-			frontierList.append(FrontierSquare(new_x, new_y, mapInfo[new_x][new_y].g+mapInfo[new_x][new_y].h))
-                        print mapInfo[new_x][new_y]
+			frontier.append(FrontierSquare(new_x, new_y, mapInfo[new_x][new_y].g+mapInfo[new_x][new_y].h))
+                        #print mapInfo[new_x][new_y]
                     elif((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
                         tentative_g = mapInfo[currentCell.x][currentCell.y].g + 1
                         if tentative_g < mapInfo[new_x][new_y].g:
@@ -160,21 +160,17 @@ def getNeighbors(currentCell):
 	                    mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
 
 	#return a list FrontierSquares
-	return frontierList
+	return mapInfo
 
 #returns the distance from the initial pose to the current position
 #looks at where the neighbor came from and then adds one to that g value
 
-
-	return 1
-
 #returns array of PoseStamps
-def reconstructPath():
+def reconstructPath(mapInfo):
 	global xInit
 	global yInit
 	global yEnd
 	global xEnd
-        global mapInfo
 
 	Path = []
 	currentCell = (xEnd, yEnd)
@@ -210,7 +206,6 @@ def locateWayPoints(Path):
 def makeList():
 	global height
 	global width
-        global mapInfo
 
 	gridList = []
 

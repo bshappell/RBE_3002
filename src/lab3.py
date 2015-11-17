@@ -114,10 +114,10 @@ if __name__ == '__main__':
     global width
     global height
     global wallpub
-    xInit = 5
+    xInit = 4
     yInit = 6
-    xEnd = 4
-    yEnd = 3
+    xEnd = 5
+    yEnd = 6
     width = 10
     height = 10
 
