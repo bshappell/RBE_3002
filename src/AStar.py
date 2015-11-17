@@ -74,5 +74,109 @@ def AStar(start,goal):
     return failure #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
 
 
+#mapInfo, is list of list of GridSquares
+def getHeuristic(mapInfo):
+    global xEnd
+	global yEnd
+	global width
+	global height
+
+	for x in range(width):
+		for y in range(height):
+			xDist = xEnd - x
+			yDist = yEnd - y
+			mapInfo[x][y].h = math.sqrt(xDist** 2 - yDist**2)
+
+#Sets x,y to checked
+#Sets came from in checked neighbors
+#Checks if wall and sets checked status true on walls
+#Returns list of cardinal neighbors tuple
+def getNeighbors(currentCell, mapInfo):
+	global width
+	global height
+	
+	#set current cell to checked
+	mapInfo[currentCell.x][currentCell.y].checked = 1
+    #check neighbor to north
+	delta_x = [0,1,0,-1]
+	delta_y = [1,0,-1,0]
+	frontierList = []
+
+	for i in range(len(delta_x)):
+		new_x = cuurentCell.x + delta_x[i]
+		new_y = currentCell.y + delta_y[i]
+
+		#if in bounds (equal to zero less than width)
+		if 0 <= new_x < width and 0 <= new_y < height:
+			#if the neighbor cell has not been checked
+			if mapInfo[new_x][new_y].checked == 0:
+				#set the came from value for the new cell
+				mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
+				#set the cell checked value as frontier
+				mapInfo[new_x][new_y].checked = 3
+				# set the g value to the g value of the parent node plus one
+				mapInfo[new_x][new_y].g =mapInfo[currentCell.x][currentCell.y].g + 1 
+				#append the new cell to the frontierList
+				frontierList.append(FrontierSquare(new_x, new_y, 0)
+
+			elif mapInfo[new_x][new_y].checked == 1 or mapInfo[new_x][new_y].checked == 3:
+				tentative_g = manInfo[currentCell.x][currentCell.y].g + 1
+				if tentative_g < mapInfo[new_x][new_y].g:
+					mapInfo[new_x][new_y].g = tentative_g
+					mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
+
+	#return a list FrontierSquares
+	return frontierList
+
+#returns the distance from the initial pose to the current position
+#looks at where the neighbor came from and then adds one to that g value
+def getDistance(currentCell, mapInfo):
+
+'''
+	global xInit
+	global yInit
+
+	cameFromCell = mapInfo[currentCell.x][currentCell.y].cameFrom
+	mapInfo[currentCell.x][currentCell.y].g= mapInfo[cameFromCell[0]][cameFromCell[1]].g + 1
+
+'''
+
+	return 1
+
+#returns array of PoseStamps
+def reconstructPath(goalCell, mapInfo):
+	global xInit
+	global yInit
+
+	Path = []
+	currentCell = goalCell
+
+	while currentCell.x != xInit or currentCel.y != yInit
+		nextCell = mapInfo[currentCell.x][currentCell.y].cameFrom
+		Path.append(currentCell)
+		currentCell = nextCell
+
+    #if we have reached the end
+	return Path
+
+#sets all the checked status to wall for every wall cell
+def setWalls(mapInfo):
+	global width
+	global height
+	global wallMap
+
+	lengthOfList = width * height
+
+	for i in range(lengthOfList):
+		xColumn = i % (width - 1)
+		yRow = math.floor(i / (width - 1))
+
+		# if that cell is a wall 
+		if wallMap[i] == 100:
+			#set that cells checked value to wall
+			mapInfo[xColum][yRow].checked = 2
+			
+	
+
 
 
