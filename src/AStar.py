@@ -1,6 +1,7 @@
+#!/usr/bin/env python
 
-
-
+import math 
+import numpy
 class GridSquare:
     def __init__(self, checked, h, g, cameFrom):
         self.checked = checked # 0 = unchecked, 1 = checked, 2 = wall,  3 = frontier
@@ -15,7 +16,7 @@ class FrontierSquare:
         self.f = f
 
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
-def AStar(start,goal):
+def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
     global width
     global height
@@ -24,6 +25,16 @@ def AStar(start,goal):
     global xInit
     global yInit
 
+    xInit = ixInit
+    yInit = iyInit
+    xEnd = ixEnd
+    yEnd = iyEnd
+    width = iwidth
+    height = iheight
+
+    print xInit
+    print yInit
+
     frontier = [] # list of frontier squares 
 
     mapInfo = [] # 2d array of grid square info
@@ -31,28 +42,25 @@ def AStar(start,goal):
     for i in range(height):
         row.append(GridSquare(0, 0, 0, (0,0))) # append empty grid cell
     for i in range(width):
-        checked.append(row)
+        mapInfo.append(row)
+
+    print mapInfo[0]
 
 
     # calculate out heursitics at each coordinate
     getHeuristic(mapInfo)
-
-    #set walls in map info
-    setWalls(mapInfo)
 
 	# starting x and y are the current coordinates
     curr_x = xInit
     curr_y = yInit
 
     # Determine current f value
-    get_distance(mapInfo)
     curr_f = mapInfo[curr_x][curr_y].h + mapInfo[curr_x][curr_y].g
 
     # add starting square to frontier
-    frontier.append(FrontierSquare(curr_x, curr_y, curr_f)
-     
-	
-    while len(frontier) # while there are still nodes that have not been checked, continually run the algorithm
+    frontier.append(FrontierSquare(curr_x, curr_y, curr_f))
+
+    while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
 	
         currentSquare = frontier[0] # this is the most promising node of all nodes in the open set
         frontier = frontier[1:len(frontier)] # remove currentSquare from the frontier
@@ -60,16 +68,17 @@ def AStar(start,goal):
         curr_x = currentSquare.x
         curr_y = currentSquare.y
 
-        if curr_x == xEnd and curr_y == yEnd # if the best possible path found leads to the goal, it is the best possible path that the robot could discover
+        if (curr_x == xEnd) and (curr_y == yEnd): # if the best possible path found leads to the goal, it is the best possible path that the robot could discover
+            print("goal reached")            
             return reconstruct_path(came_from, goal)
          
         neighbors = getNeighbors(currentSquare, mapInfo) # re-evaluate each neighboring node
 
         # add from frontier
-        frontier.append(neighbor)
+        frontier.append(neighbors)
 
         # sort frontierList by f (g(s) + h(s))
-        frontier.sort(key=lambda state: state.f)
+        frontier.sort(key=lambda x: x.f)
  
     return failure #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
 
@@ -77,15 +86,15 @@ def AStar(start,goal):
 #mapInfo, is list of list of GridSquares
 def getHeuristic(mapInfo):
     global xEnd
-	global yEnd
-	global width
-	global height
+    global yEnd
+    global width
+    global height
 
-	for x in range(width):
+    for x in range(width):
 		for y in range(height):
 			xDist = xEnd - x
 			yDist = yEnd - y
-			mapInfo[x][y].h = math.sqrt(xDist** 2 - yDist**2)
+			mapInfo[x][y].h = math.sqrt((xDist**2) + (yDist**2))
 
 #Sets x,y to checked
 #Sets came from in checked neighbors
@@ -103,7 +112,7 @@ def getNeighbors(currentCell, mapInfo):
 	frontierList = []
 
 	for i in range(len(delta_x)):
-		new_x = cuurentCell.x + delta_x[i]
+		new_x = currentCell.x + delta_x[i]
 		new_y = currentCell.y + delta_y[i]
 
 		#if in bounds (equal to zero less than width)
@@ -117,13 +126,12 @@ def getNeighbors(currentCell, mapInfo):
 				# set the g value to the g value of the parent node plus one
 				mapInfo[new_x][new_y].g =mapInfo[currentCell.x][currentCell.y].g + 1 
 				#append the new cell to the frontierList
-				frontierList.append(FrontierSquare(new_x, new_y, 0)
-
-			elif mapInfo[new_x][new_y].checked == 1 or mapInfo[new_x][new_y].checked == 3:
-				tentative_g = manInfo[currentCell.x][currentCell.y].g + 1
-				if tentative_g < mapInfo[new_x][new_y].g:
-					mapInfo[new_x][new_y].g = tentative_g
-					mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
+				frontierList.append(FrontierSquare(new_x, new_y, 0))
+                elif((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
+                    tentative_g = mapInfo[currentCell.x][currentCell.y].g + 1
+                    if tentative_g < mapInfo[new_x][new_y].g:
+	                    mapInfo[new_x][new_y].g = tentative_g
+	                    mapInfo[new_x][new_y].cameFrom = (currentCell.x, currentCell.y)
 
 	#return a list FrontierSquares
 	return frontierList
@@ -131,15 +139,6 @@ def getNeighbors(currentCell, mapInfo):
 #returns the distance from the initial pose to the current position
 #looks at where the neighbor came from and then adds one to that g value
 def getDistance(currentCell, mapInfo):
-
-'''
-	global xInit
-	global yInit
-
-	cameFromCell = mapInfo[currentCell.x][currentCell.y].cameFrom
-	mapInfo[currentCell.x][currentCell.y].g= mapInfo[cameFromCell[0]][cameFromCell[1]].g + 1
-
-'''
 
 	return 1
 
@@ -151,7 +150,7 @@ def reconstructPath(goalCell, mapInfo):
 	Path = []
 	currentCell = goalCell
 
-	while currentCell.x != xInit or currentCel.y != yInit
+	while currentCell.x != xInit or currentCel.y != yInit:
 		nextCell = mapInfo[currentCell.x][currentCell.y].cameFrom
 		Path.append(currentCell)
 		currentCell = nextCell
@@ -159,23 +158,7 @@ def reconstructPath(goalCell, mapInfo):
     #if we have reached the end
 	return Path
 
-#sets all the checked status to wall for every wall cell
-def setWalls(mapInfo):
-	global width
-	global height
-	global wallMap
 
-	lengthOfList = width * height
-
-	for i in range(lengthOfList):
-		xColumn = i % (width - 1)
-		yRow = math.floor(i / (width - 1))
-
-		# if that cell is a wall 
-		if wallMap[i] == 100:
-			#set that cells checked value to wall
-			mapInfo[xColum][yRow].checked = 2
-			
 	
 
 
