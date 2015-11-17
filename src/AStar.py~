@@ -1,0 +1,78 @@
+
+
+
+class GridSquare:
+    def __init__(self, checked, h, g, cameFrom):
+        self.checked = checked # 0 = unchecked, 1 = checked, 2 = wall,  3 = frontier
+        self.h = h
+        self.g = g
+        self.cameFrom = cameFrom 
+
+class FrontierSquare:
+    def __init__(self, x, y, f):
+        self.x = x
+        self.y = y
+        self.f = f
+
+#it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
+def AStar(start,goal):
+
+    global width
+    global height
+    global xEnd
+    global yEnd
+    global xInit
+    global yInit
+
+    frontier = [] # list of frontier squares 
+
+    mapInfo = [] # 2d array of grid square info
+    row = []
+    for i in range(height):
+        row.append(GridSquare(0, 0, 0, (0,0))) # append empty grid cell
+    for i in range(width):
+        checked.append(row)
+
+
+    # calculate out heursitics at each coordinate
+    getHeuristic(mapInfo)
+
+    #set walls in map info
+    setWalls(mapInfo)
+
+	# starting x and y are the current coordinates
+    curr_x = xInit
+    curr_y = yInit
+
+    # Determine current f value
+    get_distance(mapInfo)
+    curr_f = mapInfo[curr_x][curr_y].h + mapInfo[curr_x][curr_y].g
+
+    # add starting square to frontier
+    frontier.append(FrontierSquare(curr_x, curr_y, curr_f)
+     
+	
+    while len(frontier) # while there are still nodes that have not been checked, continually run the algorithm
+	
+        currentSquare = frontier[0] # this is the most promising node of all nodes in the open set
+        frontier = frontier[1:len(frontier)] # remove currentSquare from the frontier
+        
+        curr_x = currentSquare.x
+        curr_y = currentSquare.y
+
+        if curr_x == xEnd and curr_y == yEnd # if the best possible path found leads to the goal, it is the best possible path that the robot could discover
+            return reconstruct_path(came_from, goal)
+         
+        neighbors = getNeighbors(currentSquare, mapInfo) # re-evaluate each neighboring node
+
+        # add from frontier
+        frontier.append(neighbor)
+
+        # sort frontierList by f (g(s) + h(s))
+        frontier.sort(key=lambda state: state.f)
+ 
+    return failure #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
+
+
+
+
