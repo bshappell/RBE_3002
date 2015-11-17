@@ -49,6 +49,8 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
     # add starting square to frontier
     frontier.put((curr_f, (curr_x, curr_y)))
+    updateChecked(curr_x, curr_y, checked, 3)    
+
     '''print "frontier info"
     print frontier[0].x
     print frontier[0].y
@@ -98,7 +100,9 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
                     if tentative_g < mapInfo[new_x][new_y].g:
 	                mapInfo[new_x][new_y].g = tentative_g
 	                mapInfo[new_x][new_y].cameFrom = (curr_x, curr_y)
-        updateChecked(curr_x, curr_y, checked, 1) #mapInfo[curr_x][curr_y].check = 1
+
+        if(checked[curr_x][curr_y] == 3):        
+            updateChecked(curr_x, curr_y, checked, 1) #mapInfo[curr_x][curr_y].check = 1
 
     # print values of checked
     for i in range(10):
