@@ -36,16 +36,22 @@ def publishCells(grid):
     cells.cell_height = 0.3 # edit for grid size
 
     for i in range(1,height): #height should be set to hieght of grid
-        k=k+1
         for j in range(1,width): #height should be set to hieght of grid
-            k=k+1
             #print k # used for debugging
             if (grid[k] == 100):
                 point=Point()
-                point.x=j*.3 # edit for grid size
-                point.y=i*.3 # edit for grid size
+                point.x=j*.3+.32 # edit for grid size
+                point.y=i*.3-.15 # edit for grid size
                 point.z=0
                 cells.cells.append(point)
+            k=k+1
+        k=k+1
+        if (grid[k] == 100):
+            point=Point()
+            point.x=j*.3+.62 # edit for grid size
+            point.y=i*.3-.15 # edit for grid size
+            point.z=0
+            cells.cells.append(point)
 
     #print cells # used for debugging
     pub.publish(cells)           
@@ -55,7 +61,7 @@ def run():
     global pub
     rospy.init_node('lab3')
     sub = rospy.Subscriber("/map", OccupancyGrid, mapCallBack)
-    pub = rospy.Publisher("/grid_check", GridCells, queue_size=1)
+    pub = rospy.Publisher("/grid_walls", GridCells, queue_size=1)
     sleeper = rospy.Duration(1)
     rospy.sleep(sleeper)
 
@@ -86,3 +92,4 @@ if __name__ == '__main__':
         run()
     except rospy.ROSInterruptException:
         pass
+
