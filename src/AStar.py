@@ -42,12 +42,14 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
         row.append(GridSquare(0, 0, 0, (0,0))) # append empty grid cell
     for i in range(width):
         mapInfo.append(row)
+    print "width", len(mapInfo)
+    print "height", len(mapInfo[0])
 
     #print mapInfo[0]
 
 
     # calculate out heursitics at each coordinate
-    getHeuristic()
+    #getHeuristic()
 
 	# starting x and y are the current coordinates
     curr_x = xInit
@@ -76,14 +78,16 @@ def AStar(ixInit, iyInit, ixEnd, iyEnd, iwidth, iheight):
 
         if (curr_x == xEnd) and (curr_y == yEnd): # if the best possible path found leads to the goal, it is the best possible path that the robot could discover
             print("goal reached")            
-            return reconstructPath(mapInfo)
+            return reconstructPath()
          
         neighbors = getNeighbors(currentSquare) # re-evaluate each neighboring node
         
         # add from frontier
         for neighbor in neighbors:
             frontier.append(neighbor)
-
+            print neighbor.x
+            print neighbor.y
+            print neighbor.f
         # sort frontierList by f (g(s) + h(s))        
         frontier.sort(key=lambda cell: cell.f)
     print "failure" 
@@ -96,13 +100,19 @@ def getHeuristic():
     global yEnd
     global width
     global height
+    global mapInfo
 
     for x in range(width):
 	for y in range(height):
 	    xDist = xEnd - x
 	    yDist = yEnd - y
+            print "xDist ", xDist, " yDist ", yDist, " x ", x, " y ", y
+	    #print math.sqrt((xDist**2) + (yDist**2))
+	    print mapInfo[x][y].h
 	    mapInfo[x][y].h = math.sqrt((xDist**2) + (yDist**2))
 
+    #print "map h", mapInfo.h
+    #print (math.sqrt(2**2 + 4**2))
 
 
 #Sets x,y to checked
@@ -112,6 +122,7 @@ def getHeuristic():
 def getNeighbors(currentCell):
 	global width
 	global height
+        global mapInfo
 	#print "width"
         #print width
         #print "height"
@@ -123,9 +134,10 @@ def getNeighbors(currentCell):
 	delta_y = [1,0,-1,0]
 	frontierList = []
 
-	for i in range(len(delta_x)):
+	for i in range(4):
 		new_x = currentCell.x + delta_x[i]
 		new_y = currentCell.y + delta_y[i]
+                print "new_x ", new_x, "new_y ",new_y
 		#if in bounds (equal to zero less than width)
 		if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
                     #print "new_x ", new_x, " new_y ",new_y
@@ -139,7 +151,8 @@ def getNeighbors(currentCell):
 				# set the g value to the g value of the parent node plus one
 			mapInfo[new_x][new_y].g =mapInfo[currentCell.x][currentCell.y].g + 1 
 				#append the new cell to the frontierList
-			frontierList.append(FrontierSquare(new_x, new_y, 0))
+			frontierList.append(FrontierSquare(new_x, new_y, mapInfo[new_x][new_y].g+mapInfo[new_x][new_y].h))
+                        print mapInfo[new_x][new_y]
                     elif((mapInfo[new_x][new_y].checked == 1) or (mapInfo[new_x][new_y].checked == 3)):
                         tentative_g = mapInfo[currentCell.x][currentCell.y].g + 1
                         if tentative_g < mapInfo[new_x][new_y].g:
@@ -151,7 +164,7 @@ def getNeighbors(currentCell):
 
 #returns the distance from the initial pose to the current position
 #looks at where the neighbor came from and then adds one to that g value
-def getDistance(currentCell):
+
 
 	return 1
 
@@ -161,6 +174,7 @@ def reconstructPath():
 	global yInit
 	global yEnd
 	global xEnd
+        global mapInfo
 
 	Path = []
 	currentCell = (xEnd, yEnd)
@@ -196,6 +210,7 @@ def locateWayPoints(Path):
 def makeList():
 	global height
 	global width
+        global mapInfo
 
 	gridList = []
 
