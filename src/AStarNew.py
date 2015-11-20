@@ -13,7 +13,12 @@ class GridSquare:
         self.wallVal = wallVal
         self.cameFrom = cameFrom 
 
-
+def initAstar():
+    
+    global ckd
+    global front
+    ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
+    front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
 def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
@@ -367,4 +372,31 @@ def makePathList(Path, height, width):
 	return pathList
 
 
+#grid is the list of points that have been checked
+#num is designating whether it is a 2-front, 1-checked, or 100-wall
+def publishCells(grid,num):
+    global ckd
+    global front
+    print "publishing"
+    k=0
+    cells = GridCells()
+    cells.header.frame_id = 'map'
+    cells.cell_width = 0.3 # edit for grid size .3 for simple map
+    cells.cell_height = 0.3 # edit for grid size
+
+    for square in grid: #height should be set to hieght of grid
+            #print k # used for debugging
+            point=Point()
+            point.x=square.x*cells.cell_width+.32 # edit for grid size
+            point.y=i.square.y*cells.cell_height-.15 # edit for grid size
+            point.z=0
+            cells.cells.append(point)
+
+    #print cells # used for debugging
+    if(num == 100):
+        pub.publish(cells)           
+    if(num == 1):
+        ckd.publish(cells)
+    if(num == 2):
+        front.publish(cells)
 
