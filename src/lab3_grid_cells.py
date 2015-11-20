@@ -141,7 +141,7 @@ def run():
 
 
     #used to make checker board # used for debugging
-    checker=[1.0,0.0,1.0,0.0,1.0,0.0,1.0,0.0,1.0,0.0,
+    checker=[1.0,1.0,1.0,1.0,1.0,0.0,1.0,0.0,1.0,0.0,
 1.0,0.0,1.0,0.0,1.0,0.0,1.0,0.0,1.0,0.0,
 1.0,0.0,1.0,0.0,1.0,0.0,1.0,0.0,1.0,0.0,
 1.0,0.0,1.0,0.0,1.0,0.0,1.0,0.0,1.0,0.0,
@@ -154,8 +154,8 @@ def run():
 
     while (1 and not rospy.is_shutdown()):
         publishCells(mapData,100) #publishing map data every 2 seconds
-        publishCells(mapData,2)
-        publishCells(mapData,1)
+        publishFront(checker)
+        publishChecked(checker)
         for i in range(1, 100):
             if(mapData[i] == 1):
                 print mapData[i]
