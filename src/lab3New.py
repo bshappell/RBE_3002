@@ -72,7 +72,7 @@ def mapCallBack(data):
     #print data.info # used for debugging
     #publishCells(mapgrid.data) # used for debugging
 	
-def publishCells(grid):
+def publishWalls(grid):
     global wallpub
     print "publishing"
     k=0
@@ -162,7 +162,7 @@ if __name__ == '__main__':
     while 1 and not rospy.is_shutdown():
         print("starting")
         rospy.sleep(1)
-        publishCells(mapData) #publishing map data every 2 seconds
+        publishWalls(mapData) #publishing map data every 2 seconds
         print "start pose"
         print xInit
         print yInit
