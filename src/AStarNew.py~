@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 #line 28, 29 and 30 is still throwing an error somehow.... it says line 31 is incorrect but if you comment out 28,29 and 30 it works just fine
-#line 256 is turning a list of locations and corresponding dirrections to poseStamped messages.... Theres a not there too but i didn't figure out how to do that, but it should be fairly straight forward hopefully
-#line 183, i don't know how we get wall data, but this should return a value, 0 or 100 for a given x and y coordinate based on if it's a wall or not
+#
 
 import math 
 import numpy
@@ -95,38 +94,34 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
             new_y = neighbors[i][1] 
             #if in bounds (equal to zero less than width)
             if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
-                #if the node is unchecked
                 if itemExists(unchecked, new_x, new_y):
-                    
+    
                     #sets index value of node in unchecked
                     index = getIndexPlace(unchecked, new_x, new_y)
 
-                    #if the node is not a wall
-                    if unchecked[index].wallVal == 0:    
-
-				        #set the came from value for the new cell
-                        new_cameFrom = (curr_x, curr_y)
+				    #set the came from value for the new cell
+                    new_cameFrom = (curr_x, curr_y)
 		    
-				        # set the g value to the g value of the parent node plus one
-                        new_g = currentSquare.g + 1
+				    # set the g value to the g value of the parent node plus one
+                    new_g = currentSquare.g + 1
                 
-                        #get's the h value of the new cell
-                        new_h = unchecked[index].h
+                    #get's the h value of the new cell
+                    new_h = unchecked[index].h
 
-				        #set f value
-                        new_f = new_h + new_g
+				    #set f value
+                    new_f = new_h + new_g
 
-                        #gets old Wall Value
-                        new_wallVal = unchecked[index].wallVal
+                    #gets old Wall Value
+                    new_wallVal = unchecked[index].wallVal
 
-                        #makes new gridCell
-                        newCell = GridSquare(new_x, new_y, new_h, new_g, new_f, new_wallVal, new_cameFrom)
+                    #makes new gridCell
+                    newCell = GridSquare(new_x, new_y, new_h, new_g, new_f, new_wallVal, new_cameFrom)
 
-                        #add cell to frontier
-                        frontier.put(newCell)
+                    #add cell to frontier
+                    frontier.put(newCell)
 
-                        #remove cell from unchecked
-                        unchecked = nodeRemove(unchecked, new_x, new_y)
+                    #remove cell from unchecked
+                    unchecked = nodeRemove(unchecked, new_x, new_y)
                         
 
                 elif itemExists(checked, new_x, new_y):
