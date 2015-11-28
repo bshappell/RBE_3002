@@ -9,7 +9,6 @@ import numpy
 import Queue
 class GridSquare:
     def __init__(self, x, y, h, g, f, wallVal, cameFrom):
-        #self.check = 0 # 0 = unchecked, 1 = checked, 2 = wall,  3 = frontier
         self.x = x
         self.y = y
         self.h = h
@@ -26,10 +25,10 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
     checked = []
     unchecked = []
 
-    #add a node for every x and y coordiante to the unchecked list
+    #add a node for every x and y coordiate to the unchecked list
     for i in range(width):
         for z in range(height):
-            unchecked.append(GridSquare(x, y, 0, 0, 0, 0, (0,0))
+            unchecked.append(GridSquare(x, y, 0, 0, 0, 0, (0,0)))
 
     #add the wall value for every Grid Square
     for i in range(len(unchecked)):
@@ -278,7 +277,7 @@ def getDirection(x, y):
         else:
             print "incorrect Direction"
             return 10
-	elif x == 1:
+    elif x == 1:
         if y == 0:
             return math.pi
         else:
