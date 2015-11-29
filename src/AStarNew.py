@@ -21,13 +21,13 @@ class GridSquare:
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
 def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
-    frontier = Queue.PriorityQueue()
+    frontier = []
     checked = []
     unchecked = []
 
     #add a node for every x and y coordiate to the unchecked list
-    for i in range(width):
-        for z in range(height):
+    for x in range(width):
+        for y in range(height):
             unchecked.append(GridSquare(x, y, 0, 0, 0, 0, (0,0)))
 
     #add the wall value for every Grid Square
@@ -66,32 +66,35 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
     initNode = GridSquare(curr_x, curr_y, init_h, init_g, init_f, init_wallVal, init_cameFrom)   
 
     # add starting square to frontier
-    frontier.put(initNode)
+    frontier.append(initNode)
 
     #remove starting cell from unchecked
     unchecked = nodeRemove(unchecked, xInit, yInit)
     
 
-    while(not frontier.empty()): # while there are still nodes that have not been checked, continually run the algorithm
+    while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
 	    
         #gets the most likely node from frontier and removes it from frontier
-        currentSquare = frontier.get() 
+        currentSquare = frontierGetMin(frontier) 
        
         #set's current x and y values based on node being expanded
         curr_x = currentSquare.x
         curr_y = currentSquare.y
 
+        print "currX" , curr_x , "currY" , curr_y
+
         #if the current cell is the goal
         if (curr_x == xEnd) and (curr_y == yEnd): 
-            print("goal reached")            
+            print("goal reached!")            
             return reconstructPath(checked, xInit, yInit, xEnd, yEnd)                                             
         
         #get a list of all neighboring x and y coordiantes 
         neighbors = getNeighbors(curr_x, curr_y) 
         
-        for i in range(0,3):
+        for i in range(4):
             new_x = neighbors[i][0] 
             new_y = neighbors[i][1] 
+            print "new_x ", new_x, "new_y ",new_y
             #if in bounds (equal to zero less than width)
             if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
                 #if the node is unchecked
@@ -122,7 +125,7 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
                         newCell = GridSquare(new_x, new_y, new_h, new_g, new_f, new_wallVal, new_cameFrom)
 
                         #add cell to frontier
-                        frontier.put(newCell)
+                        frontier.append(newCell)
 
                         #remove cell from unchecked
                         unchecked = nodeRemove(unchecked, new_x, new_y)
@@ -141,37 +144,56 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
                         checked[index].g = tentative.g
                         checked[index].cameFrom = (curr_x, curr_y)
 
-            #adds the current cell to the checked list      
-            checked = nodeAdd(checked, curr_x, curr_y)
+            
+
+            #creates the current node  
+            originalCell = GridSquare(curr_x, curr_y, currentSquare.h, currentSquare.g, currentSquare.f, currentSquare.wallVal, currentSquare.cameFrom) 
+
+            #adds the current cell to the checked list 
+            checked = nodeAdd(checked, originalCell)
 
     print "failure" 
     return -1 #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
+
+#returns the most likely node on the frontier and removes it from the frontier
+def frontierGetMin(frontier):
+    lowestF = 100000;
+    lowestIVal = 100000;
+    for i in range(len(frontier)):
+        currentF = frontier[i].f
+        if(currentF < lowestF):
+            lowestF = currentF
+            lowestIVal = i
+    nextNode = frontier[lowestIVal]
+    frontier.pop(lowestIVal)
+    return nextNode
+    
+
+
 
 # goes through a list and returns the idex for the desired cell
 def getIndexPlace(listToSearch, xCoord, yCoord):
     for i in range(len(listToSearch)):
         listItem = listToSearch[i]
-        if( xCoord == listItemp.x and yCoord == listItem.y):
+        if( xCoord == listItem.x and yCoord == listItem.y):
             return i
-        elif( i == len(listToSearch)):
-            print "list Item Not Found" 
-            return -10
+    print "list Item Not Found" 
+    return -10
 
 #checks if a given x and y coordiante are in a given list
 def itemExists(listToSearch, xCoord, yCoord):
     for i in range(len(listToSearch)):
         listItem = listToSearch[i]
-        if( xCoord == listItemp.x and yCoord == listItem.y):
+        if( xCoord == listItem.x and yCoord == listItem.y):
             return True
-        elif( i == len(listToSearch)):
-            return False
+    return False
 
 #removes given node from given list
 def nodeRemove(givenList, xCoord, yCoord):
     #verifies the item is currently in the list
     if itemExists(givenList, xCoord, yCoord):
         i = getIndexPlace(givenList, xCoord, yCoord)
-        givenList.pop([i])
+        givenList.pop(i)
         return givenList
     else:
         print "item not in list"
@@ -209,7 +231,7 @@ def getNeighbors(curr_x, curr_y):
         new_y = curr_y + delta_y[i]
         point = (new_x,new_y)
         neighbors.append(point)
-        #print "new_x ", new_x, "new_y ",new_y
+        print "neighbor_x ", new_x, "neighbor_y ",new_y
 		
     return neighbors
 

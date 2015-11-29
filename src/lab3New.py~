@@ -168,8 +168,8 @@ if __name__ == '__main__':
         print yEnd
         AStarNew.AStar(xInit, yInit, xEnd, yEnd, width, height)
         #print "goal reached!!!"
-        #print xEnd
-        #print yEnd
+        print xEnd
+        print yEnd
         print("complete")
         rospy.loginfo("Complete")
         rospy.spin() 
