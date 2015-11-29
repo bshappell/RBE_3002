@@ -86,8 +86,15 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
         #if the current cell is the goal
         if (curr_x == xEnd) and (curr_y == yEnd): 
-            print("goal reached!")            
-            #return reconstructPath(checked, xInit, yInit, xEnd, yEnd) 
+            print("goal reached!") 
+            
+            #creates the current node  
+            originalCell = GridSquare(curr_x, curr_y, currentSquare.h, currentSquare.g, currentSquare.f, currentSquare.wallVal, currentSquare.cameFrom) 
+
+            #adds the current cell to the checked list 
+            checked = nodeAdd(checked, originalCell)
+           
+            reconstructPath(checked, xInit, yInit, xEnd, yEnd) 
             return 1                                       
         
         #get a list of all neighboring x and y coordiantes 
@@ -250,17 +257,19 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
         #set x and y values for current cell
         curr_x = currentCell[0]
         curr_y = currentCell[1]
+        print "path x", curr_x , "path y" , curr_y
         # get location of current cell in list
         currentIndex = getIndexPlace(checked, curr_x, curr_y)
         #set the next cell to be the came from cell of the current cell
-        nextCell = checked[index].cameFrom
+        nextCell = checked[currentIndex].cameFrom
         # add the current cell to the list
         Path.append(currentCell)
         # change the current cell to be the next cell
         currentCell = nextCell
 
     #if we have reached the end
-    return Path
+    #locateWayPoints(Path)
+    
 
 #locate WayPoints
 def locateWayPoints(path):
@@ -283,8 +292,11 @@ def locateWayPoints(path):
         yDiff = new_yDiff
 
     #turn data into list of poses
-    for i in range(0, len(listWayPoints)):
-       #I don't know how to do this.................... Look at Arthurs  code on GIT maybe? That's what i reference with doing the rest but this part didn't make any sense.... 
+    for i in range(0, len(listWay)):
+        newX = listPoses[i][0]
+        newY = listPoses[i][1]
+        newDirection = listOfDirections[i]
+        print "x" , newX, "y" , newY , "direction" , newDirection
 
 	return listOfPoses
 
