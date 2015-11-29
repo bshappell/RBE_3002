@@ -117,10 +117,10 @@ if __name__ == '__main__':
     global wallpub
     xInit = 4
     yInit = 6
-    xEnd = 5
-    yEnd = 5
-    width = 10
-    height = 10
+    xEnd = 22
+    yEnd = 22
+    width = 30
+    height = 30
 
     AMap = 0
     worldMap = 0
@@ -168,8 +168,8 @@ if __name__ == '__main__':
         print yEnd
         AStarNew.AStar(xInit, yInit, xEnd, yEnd, width, height)
         #print "goal reached!!!"
-        print xEnd
-        print yEnd
+        #print xEnd
+        #print yEnd
         print("complete")
         rospy.loginfo("Complete")
         rospy.spin() 

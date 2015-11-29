@@ -82,11 +82,13 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
         curr_y = currentSquare.y
 
         print "currX" , curr_x , "currY" , curr_y
+        print "g" , currentSquare.g, "h" , currentSquare.h , "f" , currentSquare.f
 
         #if the current cell is the goal
         if (curr_x == xEnd) and (curr_y == yEnd): 
             print("goal reached!")            
-            return reconstructPath(checked, xInit, yInit, xEnd, yEnd)                                             
+            #return reconstructPath(checked, xInit, yInit, xEnd, yEnd) 
+            return 1                                       
         
         #get a list of all neighboring x and y coordiantes 
         neighbors = getNeighbors(curr_x, curr_y) 
@@ -94,9 +96,10 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
         for i in range(4):
             new_x = neighbors[i][0] 
             new_y = neighbors[i][1] 
-            print "new_x ", new_x, "new_y ",new_y
+            #print "new_x ", new_x, "new_y ",new_y
             #if in bounds (equal to zero less than width)
             if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
+                
                 #if the node is unchecked
                 if itemExists(unchecked, new_x, new_y):
                     
@@ -105,7 +108,7 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
                     #if the node is not a wall
                     if unchecked[index].wallVal == 0:    
-
+                        
 				        #set the came from value for the new cell
                         new_cameFrom = (curr_x, curr_y)
 		    
@@ -206,7 +209,8 @@ def nodeAdd(givenList, givenNode):
 
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
-    pass
+    #change this later!
+    return 0
 
 
 #takes in the x and y value of a node and the end x and y value and returns the correct heurisitic
@@ -215,6 +219,7 @@ def getHeuristic(xEnd, yEnd, xGiven, yGiven):
     xDist = xEnd - xGiven
     yDist = yEnd - yGiven
     hVal = abs(xDist) + abs(yDist)
+    #hVal = math.sqrt(xDist**2 + yDist**2)
     return hVal
 
 #returns a list of the tuples for all the neighbor x and y values
@@ -231,7 +236,7 @@ def getNeighbors(curr_x, curr_y):
         new_y = curr_y + delta_y[i]
         point = (new_x,new_y)
         neighbors.append(point)
-        print "neighbor_x ", new_x, "neighbor_y ",new_y
+        #print "neighbor_x ", new_x, "neighbor_y ",new_y
 		
     return neighbors
 

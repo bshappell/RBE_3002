@@ -117,10 +117,10 @@ if __name__ == '__main__':
     global wallpub
     xInit = 4
     yInit = 6
-    xEnd = 5
-    yEnd = 5
-    width = 10
-    height = 10
+    xEnd = 7
+    yEnd = 9
+    width = 30
+    height = 30
 
     AMap = 0
     worldMap = 0
