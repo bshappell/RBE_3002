@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-#line 28, 29 and 30 is still throwing an error somehow.... it says line 31 is incorrect but if you comment out 28,29 and 30 it works just fine
-#line 256 is turning a list of locations and corresponding dirrections to poseStamped messages.... Theres a not there too but i didn't figure out how to do that, but it should be fairly straight forward hopefully
-#line 183, i don't know how we get wall data, but this should return a value, 0 or 100 for a given x and y coordinate based on if it's a wall or not
-
 import math 
 import numpy
 import Queue
@@ -35,10 +31,10 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
         currentNode = unchecked[i]
         unchecked[i].wallVal = getWallVal(currentNode.x, currentNode.y)
     
-    #add a heuristic value for every node
+    '''#add a heuristic value for every node
     for i in range(len(unchecked)):
         currentNode = unchecked[i]
-        unchecked[i].h = getHeuristic(xEnd, yEnd, currentNode.x, currentNode.y)
+        unchecked[i].h = getHeuristic(xEnd, yEnd, currentNode.x, currentNode.y)'''
 
 	# starting x and y are the current coordinates
     curr_x = xInit
@@ -88,14 +84,14 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
         if (curr_x == xEnd) and (curr_y == yEnd): 
             print("goal reached!") 
             
-            #creates the current node  
+            #creates the goal node   
             originalCell = GridSquare(curr_x, curr_y, currentSquare.h, currentSquare.g, currentSquare.f, currentSquare.wallVal, currentSquare.cameFrom) 
 
-            #adds the current cell to the checked list 
+            #adds the goal node to the checked list 
             checked = nodeAdd(checked, originalCell)
            
-            reconstructPath(checked, xInit, yInit, xEnd, yEnd) 
-            return 1                                       
+            return reconstructPath(checked, xInit, yInit, xEnd, yEnd) 
+                                                  
         
         #get a list of all neighboring x and y coordiantes 
         neighbors = getNeighbors(curr_x, curr_y) 
@@ -123,7 +119,7 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
                         new_g = currentSquare.g + 1
                 
                         #get's the h value of the new cell
-                        new_h = unchecked[index].h
+                        new_h = getHeuristic(xEnd, yEnd, new_x, new_y)
 
 				        #set f value
                         new_f = new_h + new_g
@@ -247,7 +243,10 @@ def getNeighbors(curr_x, curr_y):
 		
     return neighbors
 
-#returns array of PoseStamps
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+#returns list of tuples of desired path
 def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
 
     Path = []
@@ -267,9 +266,19 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
         # change the current cell to be the next cell
         currentCell = nextCell
 
-    #if we have reached the end
-    #locateWayPoints(Path)
-    
+    return Path
+
+#publishes a pose Stamped message of the next waypoint using A*
+def getNextWayPoint(xInit, yInit, xEnd, yEnd, width, height): 
+    path = AStar(xInit, yInit, xEnd, yEnd, width, height)
+    wayPoints = locateWayPoints(path)
+    length = len(wayPoints)
+    if (length < 1):
+        print "at the goal"
+        return 1
+    nextWay = wayPoints[length - 1]
+    print "nextX", nextWay[0] , "nextY" , nextWay[1]
+    return nextWay
 
 #locate WayPoints
 def locateWayPoints(path):
@@ -282,23 +291,24 @@ def locateWayPoints(path):
     yDiff = 0
 
     for i in range(1, len(path)):
-        new_xDiff = path[i].x - path[i-1].x
-        new_yDiff = path[i].y - path[i-1].y
+        new_xDiff = path[i][0] - path[i-1][0]
+        new_yDiff = path[i][1] - path[i-1][1]
         #if the robot changes directions
         if new_xDiff != xDiff or new_yDiff != yDiff:
-            listOfDirections.append(getDirection(xDiff, yDiff))
+            #listOfDirections.append(getDirection(xDiff, yDiff))
             listWay.append(path[i - 1])
         xDiff = new_xDiff
         yDiff = new_yDiff
 
-    #turn data into list of poses
+    '''#turn data into list of poses
     for i in range(0, len(listWay)):
         newX = listPoses[i][0]
         newY = listPoses[i][1]
         newDirection = listOfDirections[i]
         print "x" , newX, "y" , newY , "direction" , newDirection
 
-	return listOfPoses
+	return listOfPoses'''
+    return listWay
 
 #returns the radian value of the angle theta with respect to positive x, if 10 is returned it's an error 
 def getDirection(x, y):
