@@ -117,7 +117,7 @@ if __name__ == '__main__':
     global wallpub
     xInit = 4
     yInit = 6
-    xEnd = 7
+    xEnd = 27
     yEnd = 9
     width = 30
     height = 30
@@ -154,6 +154,9 @@ if __name__ == '__main__':
     # continue making messages
 
     # do not stop publishing
+
+    # initialize astar publishes and subscribers
+    AStarNew.initAstar()
 
 
     while 1 and not rospy.is_shutdown():

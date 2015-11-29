@@ -2,7 +2,17 @@
 
 import math 
 import numpy
+import rospy
 import Queue
+from nav_msgs.msg import GridCells
+from std_msgs.msg import String
+from geometry_msgs.msg import Twist, Point
+from nav_msgs.msg import Odometry, OccupancyGrid
+from kobuki_msgs.msg import BumperEvent
+import tf
+import numpy
+import math 
+
 class GridSquare:
     def __init__(self, x, y, h, g, f, wallVal, cameFrom):
         self.x = x
@@ -138,6 +148,8 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
                         #add cell to frontier
                         frontier.append(newCell)
 
+                        publishCells(frontier, 2)
+
                         #remove cell from unchecked
                         unchecked = nodeRemove(unchecked, new_x, new_y)
                         
@@ -162,6 +174,9 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
             #adds the current cell to the checked list 
             checked = nodeAdd(checked, originalCell)
+
+            # update checked list
+            publishCells(checked, 1)
 
     print "failure" 
     return -1 #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
@@ -388,7 +403,7 @@ def publishCells(grid,num):
             #print k # used for debugging
             point=Point()
             point.x=square.x*cells.cell_width+.32 # edit for grid size
-            point.y=i.square.y*cells.cell_height-.15 # edit for grid size
+            point.y=square.y*cells.cell_height-.15 # edit for grid size
             point.z=0
             cells.cells.append(point)
 
