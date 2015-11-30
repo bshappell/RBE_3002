@@ -1,0 +1,90 @@
+#File to process obstacle expansion in the final map for frontier based
+#searching
+
+import rospy
+import copy
+from nav_msgs.msg import OccupancyGrid
+from nav_msgs.msg import GridCells
+
+
+# reads in map data
+def mapCallBack(data):
+    global mapData, grid
+    global width
+    global height
+    global mapgrid
+    global res
+    mapgrid = data
+    mapData = data.data
+    width = data.info.width
+    height = data.info.height
+    res = data.info.resolution
+    #print data.info # used for debugging
+    expandObstacles(mapgrid) # used for debugging
+
+def expandObstacles(map):
+    global res
+    global width
+    global height
+    global botRadius
+    global pub
+
+    if(botRadius < res):
+        eMap = map
+
+    else:
+        tarExp = int(round(botRadius/map.info.resolution,0))
+        cells = GridCells()
+        cells.header.frame_id = 'map'
+        cells.cell_width = botRadius/2
+        cells.cell_height = botRadius/2
+
+        
+
+    pub.publish(eMap) 
+
+#def publishChecked(grid):
+#    global ckd
+#    print "publishing"
+#    k=0
+#    cells = GridCells()
+#    cells.header.frame_id = 'map'
+#    cells.cell_width = 0.3 # edit for grid size .3 for simple map
+#    cells.cell_height = 0.3 # edit for grid size
+#
+#    for i in range(1,height): #height should be set to hieght of grid
+#        for j in range(1,9): #height should be set to hieght of grid
+#            #print k # used for debugging
+#            if (grid[k] == 0):
+#                point=Point()
+#                point.x=j*.3+.32 # edit for grid size
+#                point.y=i*.3-.15 # edit for grid size
+#                point.z=0
+#                cells.cells.append(point)
+#            k=k+1
+#        k=k+1
+#Main handler of the project
+def run():
+    global pub
+    global botRadius
+    botRadius = 0
+    rospy.init_node('expandedMap')
+    sub = rospy.Subscriber("/map", OccupancyGrid, mapCallBack)
+    pub = rospy.Publisher("/grid_walls", OccupancyGrid, queue_size=1)
+    sleeper = rospy.Duration(1)
+    rospy.sleep(sleeper)
+
+
+
+
+    while (1 and not rospy.is_shutdown()):
+        #publishCells(mapData,100) #publishing map data every 2 seconds
+
+        sleeper = rospy.Duration(1)
+        rospy.sleep(sleeper)
+     
+if __name__ == '__main__':
+    try:
+        run()
+    except rospy.ROSInterruptException:
+        pass
