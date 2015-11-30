@@ -1,0 +1,11 @@
+<launch>
+	<node name="map_server" pkg="map_server" type="map_server" args="$(find final3002)/maps/AK220Map.yaml"/>  
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find final3002)/Config/config_complete.rviz"/>  
+    <node pkg="final3002" name="rbansal_vcunha_dbourque_MapOE" type="MapOE.py" output="screen"/>
+ 	<node pkg="final3002" name="rbansal_vcunha_dbourque_MapOpt" type="MapOpt.py" output="screen"/>
+    <node pkg="final3002" name="rbansal_vcunha_dbourque_astar" type="Astar.py" output="screen"/>
+	<node pkg="final3002" name="rbansal_vcunha_dbourque_BlobSearch" type="BlobSearch.py" output="screen"/>
+	<node pkg="final3002" name="rbansal_vcunha_dbourque_Centroid" type="Centroid.py" output="screen"/>
+	<node pkg="final3002" name="rbansal_vcunha_dbourque_Rotate" type="Rotate.py" output="screen"/>
+
+</launch>

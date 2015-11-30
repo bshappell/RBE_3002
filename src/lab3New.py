@@ -126,7 +126,7 @@ if __name__ == '__main__':
     worldMap = 0
     path = 0
 
-    rospy.init_node('lab3')
+    rospy.init_node('bshappell_kcorton_nkjefferson_lab4')
     worldMapSub = rospy.Subscriber('/map', OccupancyGrid, readWorldMap)
     markerSub = rospy.Subscriber('/move_base_simple/goal1', PoseStamped, readGoal)
     sub = rospy.Subscriber("/initialPose1", PoseWithCovarianceStamped, startCallBack)
