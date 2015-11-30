@@ -6,10 +6,11 @@ import rospy
 import Queue
 from nav_msgs.msg import GridCells
 from std_msgs.msg import String
-from geometry_msgs.msg import Twist, Point
+from geometry_msgs.msg import Twist, Point, Quaternion, _Quaternion
 from nav_msgs.msg import Odometry, OccupancyGrid
 from kobuki_msgs.msg import BumperEvent
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from geometry_msgs.msg import PoseStamped
 import tf
 import numpy
 import math 
@@ -300,7 +301,7 @@ def getNextWayPoint(xInit, yInit, xEnd, yEnd, width, height):
         print "at the goal"
         return 1
     nextWay = wayPoints[lengthWay - 1]
-    nextDir = directions[length - 1]
+    nextDir = directions[lengthDir - 1]
     #print "nextX", nextWay[0] , "nextY" , nextWay[1]
     publishGoal(nextWay, nextDir)
     
