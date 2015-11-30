@@ -1,0 +1,7 @@
+<launch>
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find RBE_3002)/src/lab3Layout.rviz"/>  
+    <node pkg="RBE_3002" name="bshappell_kcorton_nkjefferson_lab4" type="lab3New.py" output="screen"/>
+    <node pkg="RBE_3002" name="Lab4MoveRobot" type="moveRobot.py" output="screen"/>
+	<node pkg="RBE_3002" name="rbansal_vcunha_dbourque_BlobSearch" type="BlobSearch.py" output="screen"/>
+	
+</launch>
