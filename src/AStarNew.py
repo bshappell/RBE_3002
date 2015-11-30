@@ -30,6 +30,10 @@ def initAstar():
     global ckd
     global front
     global wayPointPub
+    global currWay_x
+    global currWay_y
+    currWay_x = 0
+    currWay_y = 0
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
     wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
@@ -337,6 +341,8 @@ def getNextWayPoint(xEnd, yEnd, width, height):
     else:
         yInit = yPos
 
+    print "xInit" , xInit, "yInit" , yInit
+
     path = AStar(xInit, yInit, xEnd, yEnd, width, height)
     wayPoints = locateWayPointsLocations(path)
     directions = locateWayPointsDirections(path)
@@ -438,7 +444,7 @@ def getDirection(x, y):
 def publishCells(grid,num):
     global ckd
     global front
-    print "publishing"
+    #print "publishing"
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'

@@ -74,7 +74,7 @@ def mapCallBack(data):
 	
 def publishWalls(grid):
     global wallpub
-    print "publishing"
+    #print "publishing"
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
