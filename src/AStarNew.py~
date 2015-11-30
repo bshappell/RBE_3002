@@ -9,6 +9,8 @@ from std_msgs.msg import String
 from geometry_msgs.msg import Twist, Point
 from nav_msgs.msg import Odometry, OccupancyGrid
 from kobuki_msgs.msg import BumperEvent
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from geometry_msgs.msg import PoseStamped
 import tf
 import numpy
 import math 
@@ -291,21 +293,32 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
 #publishes a pose Stamped message of the next waypoint using A*
 def getNextWayPoint(xInit, yInit, xEnd, yEnd, width, height): 
     path = AStar(xInit, yInit, xEnd, yEnd, width, height)
-    wayPoints = locateWayPoints(path)
-    length = len(wayPoints)
-    if (length < 1):
+    wayPoints = locateWayPointsLocations(path)
+    directions = locateWayPointsDirections(path)
+    lengthWay = len(wayPoints)
+    lengthDir = len(directions)
+    if (lengthWay < 1 or lengthDir <1):
         print "at the goal"
         return 1
-    nextWay = wayPoints[length - 1]
-    print "nextX", nextWay[0] , "nextY" , nextWay[1]
-    return nextWay
+    nextWay = wayPoints[lengthWay - 1]
+    nextDir = directions[lengthDir - 1]
+    #print "nextX", nextWay[0] , "nextY" , nextWay[1]
+    publishGoal(nextWay, nextDir)
+    
+#publish next way point as poseStamped
+def publishGoal(location, direction):
+        goal = PoseStamped()
+        goal.header.frame_id = 'map'
+        goal.pose.position.x = location[0]
+        goal.pose.position.y = location[1]
+        goal.pose.position.z = 0
+        (w, x, y, z) = quaternion_from_euler(0, 0, direction)
+        goal.pose.orientation = Quaternion(w, x, y, z)
 
 #locate WayPoints
-def locateWayPoints(path):
+def locateWayPointsLocations(path):
 
     listWay =  []
-    listOfDirections = []
-    listOfPoses = []
 
     xDiff = 0
     yDiff = 0
@@ -320,35 +333,47 @@ def locateWayPoints(path):
         xDiff = new_xDiff
         yDiff = new_yDiff
 
-    '''#turn data into list of poses
-    for i in range(0, len(listWay)):
-        newX = listPoses[i][0]
-        newY = listPoses[i][1]
-        newDirection = listOfDirections[i]
-        print "x" , newX, "y" , newY , "direction" , newDirection
-
-	return listOfPoses'''
     return listWay
+
+#locate WayPoints
+def locateWayPointsDirections(path):
+
+    listOfDirections = []
+
+    xDiff = 0
+    yDiff = 0
+
+    for i in range(1, len(path)):
+        new_xDiff = path[i][0] - path[i-1][0]
+        new_yDiff = path[i][1] - path[i-1][1]
+        #if the robot changes directions
+        if new_xDiff != xDiff or new_yDiff != yDiff:
+            listOfDirections.append(getDirection(xDiff, yDiff))
+        xDiff = new_xDiff
+        yDiff = new_yDiff
+
+    return listOfDirections
+
 
 #returns the radian value of the angle theta with respect to positive x, if 10 is returned it's an error 
 def getDirection(x, y):
     if x == -1:
         if y == 0:
-            return 0
+            return math.pi
         else:
             print "incorrect Direction"
             return 10
     if x == 0:
         if y == -1:
-            return math.pi / 2
-        elif y ==1: 
             return - math.pi / 2
+        elif y ==1: 
+            return math.pi / 2
         else:
             print "incorrect Direction"
             return 10
     elif x == 1:
         if y == 0:
-            return math.pi
+            return 0
         else:
             print "incorrect Direction"
             return 10
@@ -403,7 +428,7 @@ def publishCells(grid,num):
             #print k # used for debugging
             point=Point()
             point.x=square.x*cells.cell_width+.32 # edit for grid size
-            point.y=i.square.y*cells.cell_height-.15 # edit for grid size
+            point.y=square.y*cells.cell_height-.15 # edit for grid size
             point.z=0
             cells.cells.append(point)
 
