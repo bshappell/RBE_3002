@@ -20,6 +20,7 @@ def mapCallBack(data):
     height = data.info.height
     res = data.info.resolution
     #print data.info # used for debugging
+    print "data recieved"
     expandObstacles(mapgrid) # used for debugging
 
 def expandObstacles(map):
@@ -28,7 +29,7 @@ def expandObstacles(map):
     global height
     global botRadius
     global pub
-
+    
     if(botRadius < res):
         eMap = map
 
@@ -40,7 +41,7 @@ def expandObstacles(map):
         cells.cell_height = botRadius/2
 
         
-
+    print "published"
     pub.publish(eMap) 
 
 #def publishChecked(grid):
