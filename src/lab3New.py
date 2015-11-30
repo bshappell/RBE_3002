@@ -134,7 +134,7 @@ if __name__ == '__main__':
     wallpub = rospy.Publisher("/expanded_map", GridCells, queue_size=1)
     cellPub = rospy.Publisher('/cell_path', GridCells, queue_size=1)
     pathPub = rospy.Publisher('/path_path', Path, queue_size=1)
-    wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
+    
 
     target = 0
     start = 0
@@ -170,7 +170,7 @@ if __name__ == '__main__':
         print "end pose"
         print xEnd
         print yEnd
-        AStarNew.getNextWayPoint(xInit, yInit, xEnd, yEnd, width, height)
+        AStarNew.getNextWayPoint(xEnd, yEnd, width, height)
         #print "goal reached!!!"
         #print xEnd
         #print yEnd

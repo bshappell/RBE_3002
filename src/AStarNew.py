@@ -29,10 +29,43 @@ def initAstar():
     
     global ckd
     global front
+    global wayPointPub
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
+    wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
+
+    # Use this object to get the robot's Odometry 
+    sub = rospy.Subscriber('/odom', Odometry, readOdom)
+
+    #sets up all the transformations used to update the robot location in the global frame
+    odom_list = tf.TransformListener()
+    odom_tf = tf.TransformBroadcaster()
+    odom_tf.sendTransform((0, 0, 0),(0, 0, 0, 1),rospy.Time.now(),"base_footprint","odom")
+
+#Odometry Callback function.
+def readOdom(msg):
+    global pose
+    global odom_tf
+
+    pose = msg.pose
+    geo_quat = pose.pose.orientation
+
+    px = msg.pose.pose.position.x
+    py = msg.pose.pose.position.y
+    quat = msg.pose.pose.orientation
+    q = [quat.x, quat.y, quat.z, quat.w]
+    roll, pitch, yaw = euler_from_quaternion(q)
+    global xPos
+    global yPos
+    global theta
+    xPos = px
+    yPos = py
+    theta = yaw   #Determine theta. 
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
-def AStar(xInit, yInit, xEnd, yEnd, width, height):
+def AStar(xEnd, yEnd, width, height):
+
+    global xPos
+    global yPos
 
     frontier = []
     checked = []
@@ -54,8 +87,8 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
         unchecked[i].h = getHeuristic(xEnd, yEnd, currentNode.x, currentNode.y)'''
 
 	# starting x and y are the current coordinates
-    curr_x = xInit
-    curr_y = yInit
+    curr_x = xPos
+    curr_y = yPos
 
     # Determine current index in the unchecked list
     index = getIndexPlace(unchecked, curr_x, curr_y)
@@ -82,7 +115,7 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
     frontier.append(initNode)
 
     #remove starting cell from unchecked
-    unchecked = nodeRemove(unchecked, xInit, yInit)
+    unchecked = nodeRemove(unchecked, curr_x, curr_y)
     
 
     while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
@@ -107,7 +140,7 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
             #adds the goal node to the checked list 
             checked = nodeAdd(checked, originalCell)
            
-            return reconstructPath(checked, xInit, yInit, xEnd, yEnd) 
+            return reconstructPath(checked, xPos, yPos, xEnd, yEnd) 
                                                   
         
         #get a list of all neighboring x and y coordiantes 
@@ -290,9 +323,9 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
 
     return Path
 
-#publishes a pose Stamped message of the next waypoint using A*
-def getNextWayPoint(xInit, yInit, xEnd, yEnd, width, height): 
-    path = AStar(xInit, yInit, xEnd, yEnd, width, height)
+#run's A* to get the path from start to goal, Finds the locations and directions of each waypoint, calls publish gaol to publish the next way point as a poseStamped
+def getNextWayPoint(xEnd, yEnd, width, height): 
+    path = AStar(xEnd, yEnd, width, height)
     wayPoints = locateWayPointsLocations(path)
     directions = locateWayPointsDirections(path)
     lengthWay = len(wayPoints)
@@ -307,13 +340,16 @@ def getNextWayPoint(xInit, yInit, xEnd, yEnd, width, height):
     
 #publish next way point as poseStamped
 def publishGoal(location, direction):
-        goal = PoseStamped()
-        goal.header.frame_id = 'map'
-        goal.pose.position.x = location[0]
-        goal.pose.position.y = location[1]
-        goal.pose.position.z = 0
-        (w, x, y, z) = quaternion_from_euler(0, 0, direction)
-        goal.pose.orientation = Quaternion(w, x, y, z)
+    
+    global wayPointPub
+    goal = PoseStamped()
+    goal.header.frame_id = 'map'
+    goal.pose.position.x = location[0]
+    goal.pose.position.y = location[1]
+    goal.pose.position.z = 0
+    (w, x, y, z) = quaternion_from_euler(0, 0, direction)
+    goal.pose.orientation = Quaternion(w, x, y, z)
+    wayPointPub.publish(goal)
 
 #locate WayPoints
 def locateWayPointsLocations(path):
@@ -361,56 +397,27 @@ def getDirection(x, y):
         if y == 0:
             return math.pi
         else:
-            print "incorrect Direction"
+            print "incorrect Direction 1"
             return 10
     if x == 0:
         if y == -1:
             return - math.pi / 2
-        elif y ==1: 
+        elif y == 1: 
             return math.pi / 2
+        elif y ==0: 
+            return 0
         else:
-            print "incorrect Direction"
+            print "incorrect Direction 2"
             return 10
     elif x == 1:
         if y == 0:
             return 0
         else:
-            print "incorrect Direction"
+            print "incorrect Direction 3"
             return 10
     else: 
-        print "incorrect Direction"
+        print "incorrect Direction 4"
         return 10
-	
-#make a list of A star grids to be printed
-def makeList(height,width):
-
-	gridList = []
-
-	
-	for y in range(height):
-            for x in range(width):
-		gridList.append(mapInfo[x][y].check)
-
-
-	return gridList
-
-
-#make a list to print the final path 
-def makePathList(Path, height, width):
-
-	pathList = []
-
-	
-	for y in range(height):
-            for x in range(width):
-		for i in range(len(Path)):
-		    if( y == Path[i][1] and x == Path[i][0]):
-			pathList.append(50)
-		    else:
-			pathList.append(0)
-
-	return pathList
-
 
 #grid is the list of points that have been checked
 #num is designating whether it is a 2-front, 1-checked, or 100-wall
