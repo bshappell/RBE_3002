@@ -115,7 +115,7 @@ def AStar(xEnd, yEnd, width, height):
     frontier.append(initNode)
 
     #remove starting cell from unchecked
-    unchecked = nodeRemove(unchecked, xInit, yInit)
+    unchecked = nodeRemove(unchecked, curr_x, curr_y)
     
 
     while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
@@ -140,7 +140,7 @@ def AStar(xEnd, yEnd, width, height):
             #adds the goal node to the checked list 
             checked = nodeAdd(checked, originalCell)
            
-            return reconstructPath(checked, xInit, yInit, xEnd, yEnd) 
+            return reconstructPath(checked, xPos, yPos, xEnd, yEnd) 
                                                   
         
         #get a list of all neighboring x and y coordiantes 

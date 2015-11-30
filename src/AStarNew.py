@@ -62,10 +62,7 @@ def readOdom(msg):
     yPos = py
     theta = yaw   #Determine theta. 
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
-def AStar(xEnd, yEnd, width, height):
-
-    global xPos
-    global yPos
+def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
     frontier = []
     checked = []
@@ -87,8 +84,8 @@ def AStar(xEnd, yEnd, width, height):
         unchecked[i].h = getHeuristic(xEnd, yEnd, currentNode.x, currentNode.y)'''
 
 	# starting x and y are the current coordinates
-    curr_x = xPos
-    curr_y = yPos
+    curr_x = xInit
+    curr_y = yInit
 
     # Determine current index in the unchecked list
     index = getIndexPlace(unchecked, curr_x, curr_y)
@@ -140,7 +137,7 @@ def AStar(xEnd, yEnd, width, height):
             #adds the goal node to the checked list 
             checked = nodeAdd(checked, originalCell)
            
-            return reconstructPath(checked, xPos, yPos, xEnd, yEnd) 
+            return reconstructPath(checked, xInit, yInit, xEnd, yEnd) 
                                                   
         
         #get a list of all neighboring x and y coordiantes 
@@ -325,7 +322,22 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
 
 #run's A* to get the path from start to goal, Finds the locations and directions of each waypoint, calls publish gaol to publish the next way point as a poseStamped
 def getNextWayPoint(xEnd, yEnd, width, height): 
-    path = AStar(xEnd, yEnd, width, height)
+
+    global xPos
+    global yPos 
+    global currWay_x
+    global currWay_y  
+
+    if((currWay_x - .5) < xPos < (currWay_x + .5)):
+        xInit = currWay_x
+    else:
+        xInit = xPos
+    if((currWay_y - .5) < yPos < (currWay_y + .5)):
+        yInit = currWay_y
+    else:
+        yInit = yPos
+
+    path = AStar(xInit, yInit, xEnd, yEnd, width, height)
     wayPoints = locateWayPointsLocations(path)
     directions = locateWayPointsDirections(path)
     lengthWay = len(wayPoints)
@@ -335,6 +347,8 @@ def getNextWayPoint(xEnd, yEnd, width, height):
         return 1
     nextWay = wayPoints[lengthWay - 1]
     nextDir = directions[lengthDir - 1]
+    currWay_x = nextWay[0]
+    currWay_y = nextWay[1]
     #print "nextX", nextWay[0] , "nextY" , nextWay[1]
     publishGoal(nextWay, nextDir)
     
