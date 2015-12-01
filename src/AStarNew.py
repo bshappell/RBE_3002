@@ -120,9 +120,6 @@ def initAstar():
     #Used to get the pose from the mouse click in RVIZ
     sub = rospy.Subscriber('/move_base_simple/goal/RBE',PoseStamped, readPose)
 
-    # initialize wall list
-    initializeWallList()
-    
 
 #Odometry Callback function.
 def readOdom(msg):
@@ -585,28 +582,16 @@ def updateWallList(grid):
     global wallList
     global height
     global width   
+    wallList = []
 
     k = 0
 
     for y in range(1,height): #height should be set to height of grid
         for x in range(1,width): #height should be set to height of grid
-            index = getIndexPlace(wallList, x, y)
-            wallList[index] = grid[k]
+            wallList.append(WallSquare(x,y,grid[k])
             k=k+1
         k=k+1
 
-
-def initializeWallList():
-    
-    global width
-    global height 
-    global wallList
-    wallList = []
-    print "Hight" , height
-    print "width" , width
-    for x in range(0,width):
-        for y in range(0, height):
-            wallList.append( WallSquare(x,y,0))
 
 
 
