@@ -44,10 +44,11 @@ def mapCallBack(data):
     mapData = data.data
     width = data.info.width
     height = data.info.height
+    res = data.info.resolution
     #print data.info # used for debugging
     print "mapped"
-    publishWalls(mapgrid.data, .1) # used for debugging
-    updateWallList(mapgrid.data) # update global wall value list
+    updateWallList(mapData) # update global wall value list
+    publishWalls(mapgrid.data, res) # used for debugging
 	
 def publishWalls(grid,res):
     #print "publishing"
@@ -102,7 +103,7 @@ def initAstar():
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
     wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
     mapsub = rospy.Subscriber("/grid_walls", OccupancyGrid, mapCallBack)
-    wallpub = rospy.Publisher("/expanded_map", GridCells, queue_size=1)
+    wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
 
     #originally sets goal to be the start position
     xEnd = 0

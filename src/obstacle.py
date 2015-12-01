@@ -42,7 +42,7 @@ def expandObstacles(map):
 
         
     print "mapCallBack published!"
-    pub.publish(eMap) 
+    pub.publish(map) 
 
 #def publishChecked(grid):
 #    global ckd
@@ -70,8 +70,8 @@ def run():
     global botRadius
     botRadius = 0
     rospy.init_node('expandedMap')
-    sub = rospy.Subscriber("/map", OccupancyGrid, mapCallBack)
-    pub = rospy.Publisher("/grid_walls", OccupancyGrid, queue_size=1)
+    sub = rospy.Subscriber("/map", OccupancyGrid, mapCallBack, queue_size=1)
+    pub = rospy.Publisher("/grid_walls", OccupancyGrid, latch=True)
     sleeper = rospy.Duration(1)
     rospy.sleep(sleeper)
 

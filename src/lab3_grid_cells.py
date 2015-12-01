@@ -24,7 +24,7 @@ def mapCallBack(data):
     width = data.info.width
     height = data.info.height
     #print data.info # used for debugging
-    #publishCells(mapgrid.data) # used for debugging
+    publishCells(mapgrid.data) # used for debugging
 
 def publishCells(grid,num):
     global pub
@@ -126,12 +126,13 @@ def publishChecked(grid):
 
 #Main handler of the project
 def run():
+    global mapData
     global pub
     global ckd
     global front
     rospy.init_node('lab3')
-    sub = rospy.Subscriber("/map", OccupancyGrid, mapCallBack)
-    pub = rospy.Publisher("/grid_walls", GridCells, queue_size=1)
+    sub = rospy.Subscriber("/grid_walls", OccupancyGrid, mapCallBack)
+    pub = rospy.Publisher("/check", GridCells, queue_size=1)
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
     sleeper = rospy.Duration(1)
