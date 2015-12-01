@@ -366,11 +366,11 @@ def nodeAdd(givenList, givenNode):
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
     
-    #global wallList
-    #index = getIndexPlace(wallList, xVal, yVal)  
+    global wallList
+    index = getIndexPlace(wallList, xVal, yVal)  
     # return the wall value at this point
-    #return wallList[index].wallVal  
-    return 0
+    return wallList[index].wallVal  
+    #return 0
 
 
 
@@ -579,6 +579,8 @@ def updateWallList(grid):
     global wallList
     global height
     global width
+    wallList = []
+
     k = 0
 
     for y in range(1,height): #height should be set to height of grid

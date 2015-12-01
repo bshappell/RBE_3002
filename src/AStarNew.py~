@@ -44,10 +44,11 @@ def mapCallBack(data):
     mapData = data.data
     width = data.info.width
     height = data.info.height
+    res = data.info.resolution
     #print data.info # used for debugging
     print "mapped"
-    publishWalls(mapgrid.data, .1) # used for debugging
-    updateWallList(mapgrid.data) # update global wall value list
+    updateWallList(mapData) # update global wall value list
+    publishWalls(mapgrid.data, res) # used for debugging
 	
 def publishWalls(grid,res):
     #print "publishing"
@@ -102,7 +103,7 @@ def initAstar():
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
     wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
     mapsub = rospy.Subscriber("/grid_walls", OccupancyGrid, mapCallBack)
-    wallpub = rospy.Publisher("/expanded_map", GridCells, queue_size=1)
+    wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
 
     #originally sets goal to be the start position
     xEnd = 0
@@ -365,11 +366,11 @@ def nodeAdd(givenList, givenNode):
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
     
-    #global wallList
-    #index = getIndexPlace(wallList, xVal, yVal)  
+    global wallList
+    index = getIndexPlace(wallList, xVal, yVal)  
     # return the wall value at this point
-    #return wallList[index].wallVal  
-    return 0
+    return wallList[index].wallVal  
+    #return 0
 
 
 
@@ -423,6 +424,8 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
         # change the current cell to be the next cell
         currentCell = nextCell
 
+    initCell = (xInit, yInit)
+    Path.append(initCell)
     return Path
 
 #run's A* to get the path from start to goal, Finds the locations and directions of each waypoint, calls publish gaol to publish the next way point as a poseStamped
@@ -442,7 +445,7 @@ def getNextWayPoint(width, height):
     else:
         yInit = yPos
 
-    print "xPos" , xPos, "yPos" , yPos
+    print "xPos" , xPos, "yPos" , yInit
 
     path = AStar(xInit, yInit, width, height)
     wayPoints = locateWayPointsLocations(path)
@@ -576,6 +579,8 @@ def updateWallList(grid):
     global wallList
     global height
     global width
+    wallList = []
+
     k = 0
 
     for y in range(1,height): #height should be set to height of grid
