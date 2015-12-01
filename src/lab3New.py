@@ -126,7 +126,7 @@ if __name__ == '__main__':
         print "end pose"
         print xEnd
         print yEnd
-        AStarNew.getNextWayPoint(width, height)
+        AStarNew.getNextWayPoint()
         #print "goal reached!!!"
         #print xEnd
         #print yEnd

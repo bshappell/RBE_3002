@@ -120,6 +120,10 @@ def initAstar():
     #Used to get the pose from the mouse click in RVIZ
     sub = rospy.Subscriber('/move_base_simple/goal/RBE',PoseStamped, readPose)
 
+    # initialize wall list
+    initializeWallList()
+    
+
 #Odometry Callback function.
 def readOdom(msg):
     global pose
@@ -157,11 +161,13 @@ def readPose(msg):
 
 
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
-def AStar(xInit, yInit, width, height):
+def AStar(xInit, yInit):
 
     global mapData
     global xEnd
     global yEnd
+    global width
+    global height
     xEnd = 2
     yEnd = 2
     frontier = []
@@ -429,7 +435,7 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
     return Path
 
 #run's A* to get the path from start to goal, Finds the locations and directions of each waypoint, calls publish gaol to publish the next way point as a poseStamped
-def getNextWayPoint(width, height):  
+def getNextWayPoint():  
 
     global xPos
     global yPos 
@@ -447,7 +453,7 @@ def getNextWayPoint(width, height):
 
     print "xPos" , xPos, "yPos" , yInit
 
-    path = AStar(xInit, yInit, width, height)
+    path = AStar(xInit, yInit)
     wayPoints = locateWayPointsLocations(path)
     directions = locateWayPointsDirections(path)
     lengthWay = len(wayPoints)
@@ -578,8 +584,7 @@ def updateWallList(grid):
     
     global wallList
     global height
-    global width
-    wallList = []
+    global width   
 
     k = 0
 
@@ -591,7 +596,17 @@ def updateWallList(grid):
         k=k+1
 
 
+def initializeWallList():
+    
+    global width
+    global height 
+    global wallList
+    wallList = []
 
+    for x in range(0,width):
+        for y in range(0, height):
+            wallNode = WallSquare(x,y,0)
+            wallList.append(wallNode)
 
 
 
