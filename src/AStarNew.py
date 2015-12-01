@@ -423,6 +423,8 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
         # change the current cell to be the next cell
         currentCell = nextCell
 
+    initCell = (xInit, yInit)
+    Path.append(initCell)
     return Path
 
 #run's A* to get the path from start to goal, Finds the locations and directions of each waypoint, calls publish gaol to publish the next way point as a poseStamped
