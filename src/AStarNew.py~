@@ -23,6 +23,13 @@ class GridSquare:
         self.f = f
         self.wallVal = wallVal
         self.cameFrom = cameFrom 
+
+class WallSquare:
+    def __init(self, x, y, wallVal):
+        self.x = x
+        self.y = y
+        self.wallVal = wallVal
+
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #mapCallBack is not being read when the map is imported from
 #the publisher in obstacle.py
@@ -40,10 +47,13 @@ def mapCallBack(data):
     #print data.info # used for debugging
     print "mapped"
     publishWalls(mapgrid.data, .1) # used for debugging
+    updateWallList(mapgrid.data) # update global wall value list
 	
 def publishWalls(grid,res):
     #print "publishing"
     global wallpub
+    global width
+    global height
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
@@ -82,6 +92,10 @@ def initAstar():
     global mapData
     global mapSub
     global wallpub
+    global xEnd
+    global yEnd
+    global xPos
+    global yPos
     currWay_x = 0
     currWay_y = 0
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
@@ -90,6 +104,10 @@ def initAstar():
     mapsub = rospy.Subscriber("/grid_walls", OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/expanded_map", GridCells, queue_size=1)
 
+    #originally sets goal to be the start position
+    xEnd = 0
+    yEnd = 0
+
     # Use this object to get the robot's Odometry 
     sub = rospy.Subscriber('/odom', Odometry, readOdom)
 
@@ -97,6 +115,9 @@ def initAstar():
     odom_list = tf.TransformListener()
     odom_tf = tf.TransformBroadcaster()
     odom_tf.sendTransform((0, 0, 0),(0, 0, 0, 1),rospy.Time.now(),"base_footprint","odom")
+
+    #Used to get the pose from the mouse click in RVIZ
+    sub = rospy.Subscriber('/move_base_simple/goal/RBE',PoseStamped, readPose)
 
 #Odometry Callback function.
 def readOdom(msg):
@@ -114,13 +135,33 @@ def readOdom(msg):
     global xPos
     global yPos
     global theta
-    xPos = px
-    yPos = py
+    xPos = int(px)
+    yPos = int(py)
     theta = yaw   #Determine theta. 
+
+#Pose Callback Function.
+def readPose(msg):
+
+    px = msg.pose.position.x
+    py = msg.pose.position.y
+    quat = msg.pose.orientation
+    q = [quat.x, quat.y, quat.z, quat.w]
+    roll, pitch, yaw = euler_from_quaternion(q)
+    global xEnd
+    global yEnd
+    global thetaPose
+    xEnd = int(px)
+    yEnd = int(py)
+    thetaPose = yaw   #Determine theta.	
+
+
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
-def AStar(xInit, yInit, xEnd, yEnd, width, height):
+def AStar(xInit, yInit, width, height):
 
     global mapData
+    global xEnd
+    global yEnd
+
     frontier = []
     checked = []
     unchecked = []
@@ -183,6 +224,7 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
         #print "currX" , curr_x , "currY" , curr_y
         #print "g" , currentSquare.g, "h" , currentSquare.h , "f" , currentSquare.f
+        #print "Yend", yEnd ,"XEnd", xEnd
 
         #if the current cell is the goal
         if (curr_x == xEnd) and (curr_y == yEnd): 
@@ -321,8 +363,12 @@ def nodeAdd(givenList, givenNode):
 
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
-    #change this later!
-    return 0
+    
+    global wallList
+    index = getIndexPlace(wallList, xVal, yVal)  
+    # return the wall value at this point
+    return wallList[index].wallVal  
+
 
 
 #takes in the x and y value of a node and the end x and y value and returns the correct heurisitic
@@ -378,7 +424,7 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
     return Path
 
 #run's A* to get the path from start to goal, Finds the locations and directions of each waypoint, calls publish gaol to publish the next way point as a poseStamped
-def getNextWayPoint(xEnd, yEnd, width, height): 
+def getNextWayPoint(width, height):  
 
     global xPos
     global yPos 
@@ -396,7 +442,7 @@ def getNextWayPoint(xEnd, yEnd, width, height):
 
     print "xInit" , xInit, "yInit" , yInit
 
-    path = AStar(xInit, yInit, xEnd, yEnd, width, height)
+    path = AStar(xInit, yInit, width, height)
     wayPoints = locateWayPointsLocations(path)
     directions = locateWayPointsDirections(path)
     lengthWay = len(wayPoints)
@@ -468,15 +514,15 @@ def locateWayPointsDirections(path):
 def getDirection(x, y):
     if x == -1:
         if y == 0:
-            return math.pi
+            return 0
         else:
             print "incorrect Direction 1"
             return 10
     if x == 0:
         if y == -1:
-            return - math.pi / 2
-        elif y == 1: 
             return math.pi / 2
+        elif y == 1: 
+            return - math.pi / 2
         elif y ==0: 
             return 0
         else:
@@ -484,7 +530,7 @@ def getDirection(x, y):
             return 10
     elif x == 1:
         if y == 0:
-            return 0
+            return math.pi
         else:
             print "incorrect Direction 3"
             return 10
@@ -519,4 +565,25 @@ def publishCells(grid,num):
         ckd.publish(cells)
     if(num == 2):
         front.publish(cells)
+
+
+
+# updates global wall list to store the occupancy values of the surrounding grid
+def updateWallList(mapgrid.data):
+    
+    global wallList
+    global height
+    global width
+    for y in range(1,height): #height should be set to height of grid
+        for x in range(1,width): #height should be set to height of grid
+            index = getIndexPlace(wallList, x, y)
+            wallList[index] =
+
+
+
+
+
+
+
+
 

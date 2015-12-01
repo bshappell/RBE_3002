@@ -23,6 +23,13 @@ class GridSquare:
         self.f = f
         self.wallVal = wallVal
         self.cameFrom = cameFrom 
+
+class WallSquare:
+    def __init(self, x, y, wallVal):
+        self.x = x
+        self.y = y
+        self.wallVal = wallVal
+
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #mapCallBack is not being read when the map is imported from
 #the publisher in obstacle.py
@@ -40,10 +47,13 @@ def mapCallBack(data):
     #print data.info # used for debugging
     print "mapped"
     publishWalls(mapgrid.data, .1) # used for debugging
+    updateWallList(mapgrid.data) # update global wall value list
 	
 def publishWalls(grid,res):
     #print "publishing"
     global wallpub
+    global width
+    global height
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
@@ -353,8 +363,12 @@ def nodeAdd(givenList, givenNode):
 
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
-    #change this later!
-    return 0
+    
+    global wallList
+    index = getIndexPlace(wallList, xVal, yVal)  
+    # return the wall value at this point
+    return wallList[index].wallVal  
+
 
 
 #takes in the x and y value of a node and the end x and y value and returns the correct heurisitic
@@ -551,4 +565,29 @@ def publishCells(grid,num):
         ckd.publish(cells)
     if(num == 2):
         front.publish(cells)
+
+
+
+# updates global wall list to store the occupancy values of the surrounding grid
+def updateWallList(grid):
+    
+    global wallList
+    global height
+    global width
+    k = 0
+
+    for y in range(1,height): #height should be set to height of grid
+        for x in range(1,width): #height should be set to height of grid
+            index = getIndexPlace(wallList, x, y)
+            wallList[index] = grid[k]
+            k=k+1
+        k=k+1
+
+
+
+
+
+
+
+
 
