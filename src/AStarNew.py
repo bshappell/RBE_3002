@@ -442,7 +442,7 @@ def getNextWayPoint(width, height):
     else:
         yInit = yPos
 
-    print "xPos" , xPos, "yPos" , yPos
+    print "xPos" , xPos, "yPos" , yInit
 
     path = AStar(xInit, yInit, width, height)
     wayPoints = locateWayPointsLocations(path)
