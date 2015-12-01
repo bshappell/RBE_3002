@@ -156,7 +156,7 @@ def readOdom(msg):
     odomW = orientation
     q = [odomW[0], odomW[1], odomW[2], odomW[3]]
     roll,pitch,yaw = euler_from_quaternion(q)
-    theta = math.degrees(yaw)
+    theta = yaw#math.degrees(yaw)
     #pose.orientation.z = yaw
 
     # fire on timer
