@@ -46,7 +46,7 @@ def mapCallBack(data):
     height = data.info.height
     res = data.info.resolution
     #print data.info # used for debugging
-    print "mapped"
+    #print "mapped"
     #updateWallList(mapData) # update global wall value list
     publishWalls(mapgrid.data, res) # used for debugging
 	
@@ -85,6 +85,8 @@ def publishWalls(grid,res):
 
 def initAstar():
     
+    print "entered init astar"    
+    
     global ckd
     global front
     global wayPointPub
@@ -98,31 +100,41 @@ def initAstar():
     global yEnd
     global xPos
     global yPos
+    xPos = 0
+    yPos = 0
     global width
     global height 
     global wallList
+    global odom_tf
+    global odom_list
     wallList = []
     width = 5
     height = 5
-    currWay_x = 0
-    currWay_y = 0
+    currWay_x = 2
+    currWay_y = 2
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
     wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
     mapsub = rospy.Subscriber("/grid_walls", OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
+    
+    odom_list = tf.TransformListener()
 
+    rospy.sleep(rospy.Duration(1,0))
+    rospy.Timer(rospy.Duration(0.1), readOdom) 
+    #pose = Pose()  
+        
     #originally sets goal to be the start position
-    xEnd = 0
-    yEnd = 0
+    xEnd = 2
+    yEnd = 2
 
     # Use this object to get the robot's Odometry 
-    sub = rospy.Subscriber('/odom', Odometry, readOdom)
+    #sub = rospy.Subscriber('/odom', Odometry, readOdom)
+    
 
-    #sets up all the transformations used to update the robot location in the global frame
-    odom_list = tf.TransformListener()
-    odom_tf = tf.TransformBroadcaster()
-    odom_tf.sendTransform((0, 0, 0),(0, 0, 0, 1),rospy.Time.now(),"base_footprint","odom")
+        
+    #odom_tf = tf.TransformBroadcaster()
+    #odom_tf.sendTransform((0, 0, 0),(0, 0, 0, 1),rospy.Time.now(),"base_footprint","odom")
 
     #Used to get the pose from the mouse click in RVIZ
     sub = rospy.Subscriber('/move_base_simple/goal/RBE',PoseStamped, readPose)
@@ -131,12 +143,29 @@ def initAstar():
 #Odometry Callback function.
 def readOdom(msg):
     global pose
-    global odom_tf
+    global xPos
+    global yPos
+    global theta
+    # odom list wait for transform
+    odom_list.waitForTransform('map', 'base_footprint', rospy.Time(0), rospy.Duration(1.0))
+    (position, orientation) = odom_list.lookupTransform('map', 'base_footprint', rospy.Time(0))
+    #pose.position.x = position[0]
+    #pose.position.y = position[1]
+    xPos = int(position[0])
+    yPos = int(position[1])
+    odomW = orientation
+    q = [odomW[0], odomW[1], odomW[2], odomW[3]]
+    roll,pitch,yaw = euler_from_quaternion(q)
+    theta = math.degrees(yaw)
+    #pose.orientation.z = yaw
 
-    pose = msg.pose
-    geo_quat = pose.pose.orientation
+    # fire on timer
+    #global pose
+    #global odom_tf
+    #pose = msg.pose
+    #geo_quat = pose.pose.orientation
 
-    px = msg.pose.pose.position.x
+    '''px = msg.pose.pose.position.x
     py = msg.pose.pose.position.y
     quat = msg.pose.pose.orientation
     q = [quat.x, quat.y, quat.z, quat.w]
@@ -145,8 +174,8 @@ def readOdom(msg):
     global yPos
     global theta
     xPos = int(px)
-    yPos = int(py)
-    theta = yaw   #Determine theta. 
+    yPos = int(py) 
+    theta = yaw   #Determine theta. '''
 
 #Pose Callback Function.
 def readPose(msg):
@@ -172,11 +201,27 @@ def AStar(xInit, yInit):
     global yEnd
     global width
     global height
-    xEnd = 2
-    yEnd = 2
+    xEnd = 1
+    yEnd = 1
     frontier = []
     checked = []
     unchecked = []
+
+    # determine if current position is considered to be a wall
+    if(getWallVal(xInit, yInit)):
+        print "AHHHHHHHHHHHH current location is a wallll: ", getWallVal(xInit, yInit)
+
+    #get a list of all neighboring x and y coordiantes 
+    neighbors = getNeighbors(xInit, yInit) 
+        
+    for i in range(4):
+        new_x = neighbors[i][0] 
+        new_y = neighbors[i][1] 
+        #print "new_x ", new_x, "new_y ",new_y
+        #if in bounds (equal to zero less than width)
+        if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
+            print "xNeigh: ", new_x, "yNeigh: ", new_y, "wall val: ", getWallVal(new_x, new_y)
+    
 
     #add a node for every x and y coordiate to the unchecked list
     for x in range(width):
@@ -322,7 +367,8 @@ def AStar(xInit, yInit):
             publishCells(checked, 1)
 
     print "failure" 
-    return -1 #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
+    fail = []
+    return fail #if the program runs out of nodes to check before it finds the goal, then a solution does not exist
 
 #returns the most likely node on the frontier and removes it from the frontier
 def frontierGetMin(frontier):
@@ -390,14 +436,22 @@ def getWallVal(xVal, yVal):
     #return wallList[index].wallVal  
     #return 0
 
-    global mapData
+    '''global mapData
     index = xVal + width*yVal # determine index of coordinates in list
     
     # determine if map data has been received yet
-    if(len(mapData)):        
+    if(len(mapData)):   
+        #if(mapData[index] != -1):
+         #   print "xVal: ", xVal, "yVal: ", yVal, "wallVal: " , mapData[index]     
+        
         return mapData[index]
     else:
-        return 0
+        return 0'''
+    '''if(xVal == 30 and yVal == 30):
+        return 1
+    else:    
+        return 0 '''
+    return 0
     
 
 
@@ -455,6 +509,7 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
 
     initCell = (xInit, yInit)
     Path.append(initCell)
+    print "Path", Path
     return Path
 
 #run's A* to get the path from start to goal, Finds the locations and directions of each waypoint, calls publish gaol to publish the next way point as a poseStamped
@@ -474,7 +529,8 @@ def getNextWayPoint():
     else:
         yInit = yPos
 
-    print "xPos" , xPos, "yPos" , yInit
+    print "xPos" , xPos, "yPos" , yPos
+    print "curr X way: ", currWay_x, "curr y way: ", currWay_y
 
     path = AStar(xInit, yInit)
     wayPoints = locateWayPointsLocations(path)
@@ -618,7 +674,27 @@ def updateWallList(grid):
             k=k+1
         k=k+1
 
+def runAstar():
 
+    print "starting run astar"
+    # initialize astar publishes and subscribers
+    initAstar()
+    
+    while 1 and not rospy.is_shutdown():
+        rospy.sleep(1)
+        #print "start pose"
+        #print xInit
+        #print yInit
+        #print "end pose"
+        #print xEnd
+        #print yEnd
+        getNextWayPoint()
+        #print "goal reached!!!"
+        #print xEnd
+        #print yEnd
+        #print("complete")
+        #rospy.loginfo("Complete")
+        #rospy.spin() 
 
 
 

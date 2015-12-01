@@ -114,19 +114,19 @@ if __name__ == '__main__':
     # do not stop publishing
 
     # initialize astar publishes and subscribers
-    AStarNew.initAstar()
+    #AStarNew.initAstar()
 
 
     while 1 and not rospy.is_shutdown():
         print("starting")
         rospy.sleep(1)
-        print "start pose"
-        print xInit
-        print yInit
-        print "end pose"
-        print xEnd
-        print yEnd
-        AStarNew.getNextWayPoint()
+        #print "start pose"
+        #print xInit
+        #print yInit
+        #print "end pose"
+        #print xEnd
+        #print yEnd
+        AStarNew.runAstar()
         #print "goal reached!!!"
         #print xEnd
         #print yEnd
