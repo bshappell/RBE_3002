@@ -91,6 +91,7 @@ def initAstar():
     global currWay_x
     global currWay_y
     global mapData
+    mapData = []
     global mapSub
     global wallpub
     global xEnd
@@ -381,13 +382,24 @@ def nodeAdd(givenList, givenNode):
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
     
-    global wallList
-    index = getIndexPlace(wallList, xVal, yVal)  
+    #global wallList
+    #index = getIndexPlace(wallList, xVal, yVal)  
     # return the wall value at this point
-    if (index == -10):
-        return -1
-    return wallList[index].wallVal  
+    #if (index == -10):
+    #    return -1
+    #return wallList[index].wallVal  
     #return 0
+
+    global mapData
+    index = xVal + width*yVal # determine index of coordinates in list
+    
+    # determine if map data has been received yet
+    if(len(mapData)):        
+        return mapData[index]
+    else:
+        return 0
+    
+
 
 
 

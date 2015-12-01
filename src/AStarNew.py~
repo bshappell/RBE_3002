@@ -47,7 +47,7 @@ def mapCallBack(data):
     res = data.info.resolution
     #print data.info # used for debugging
     print "mapped"
-    updateWallList(mapData) # update global wall value list
+    #updateWallList(mapData) # update global wall value list
     publishWalls(mapgrid.data, res) # used for debugging
 	
 def publishWalls(grid,res):
@@ -91,6 +91,7 @@ def initAstar():
     global currWay_x
     global currWay_y
     global mapData
+    mapData = []
     global mapSub
     global wallpub
     global xEnd
@@ -341,11 +342,17 @@ def frontierGetMin(frontier):
 
 # goes through a list and returns the idex for the desired cell
 def getIndexPlace(listToSearch, xCoord, yCoord):
+    #print len(listToSearc)
+    global width
+    global height
+
+    #print "width: ", width, " height: ", height
     for i in range(len(listToSearch)):
         listItem = listToSearch[i]
         if( xCoord == listItem.x and yCoord == listItem.y):
             return i
     print "list Item Not Found" 
+    print "x: ", xCoord, " y: ", yCoord
     return -10
 
 #checks if a given x and y coordiante are in a given list
@@ -375,13 +382,24 @@ def nodeAdd(givenList, givenNode):
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
     
-    global wallList
-    index = getIndexPlace(wallList, xVal, yVal)  
+    #global wallList
+    #index = getIndexPlace(wallList, xVal, yVal)  
     # return the wall value at this point
-    if (index == -10)
-        return -1
-    return wallList[index].wallVal  
+    #if (index == -10):
+    #    return -1
+    #return wallList[index].wallVal  
     #return 0
+
+    global mapData
+    index = xVal + width*yVal # determine index of coordinates in list
+    
+    # determine if map data has been received yet
+    if(len(mapData)):        
+        return mapData[index]
+    else:
+        return 0
+    
+
 
 
 
@@ -594,8 +612,8 @@ def updateWallList(grid):
 
     k = 0
 
-    for y in range(1,height): #height should be set to height of grid
-        for x in range(1,width): #height should be set to height of grid
+    for y in range(0,height-1): #height should be set to height of grid
+        for x in range(0,width-1): #height should be set to height of grid
             wallList.append(WallSquare(x,y,grid[k]))
             k=k+1
         k=k+1
