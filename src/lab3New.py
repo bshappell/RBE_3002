@@ -72,6 +72,8 @@ if __name__ == '__main__':
     global width
     global height
     global wallpub
+    global xPosPose
+    global yPosPose
     xInit = 4
     yInit = 6
     xEnd = 27
@@ -124,13 +126,13 @@ if __name__ == '__main__':
         print "end pose"
         print xEnd
         print yEnd
-        AStarNew.getNextWayPoint(xEnd, yEnd, width, height)
+        AStarNew.getNextWayPoint(width, height)
         #print "goal reached!!!"
         #print xEnd
         #print yEnd
         print("complete")
         rospy.loginfo("Complete")
-        rospy.spin() 
+        #rospy.spin() 
 
 
 

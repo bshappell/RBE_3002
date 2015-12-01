@@ -4,10 +4,9 @@ import math
 import numpy
 import rospy
 import Queue
-from nav_msgs.msg import GridCells
+from nav_msgs.msg import OccupancyGrid, GridCells, Path, Odometry
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist, Point, Quaternion, _Quaternion
-from nav_msgs.msg import Odometry, OccupancyGrid
 from kobuki_msgs.msg import BumperEvent
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import PoseStamped
@@ -24,6 +23,54 @@ class GridSquare:
         self.f = f
         self.wallVal = wallVal
         self.cameFrom = cameFrom 
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#mapCallBack is not being read when the map is imported from
+#the publisher in obstacle.py
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# reads in map data
+def mapCallBack(data):
+    global mapData, grid
+    global width
+    global height
+    global mapgrid
+    mapgrid = data
+    mapData = data.data
+    width = data.info.width
+    height = data.info.height
+    #print data.info # used for debugging
+    print "mapped"
+    publishWalls(mapgrid.data, .1) # used for debugging
+	
+def publishWalls(grid,res):
+    #print "publishing"
+    global wallpub
+    k=0
+    cells = GridCells()
+    cells.header.frame_id = 'map'
+    cells.cell_width = res # edit for grid size .3 for simple map
+    cells.cell_height = res # edit for grid size
+
+    for i in range(1,height): #height should be set to hieght of grid
+        for j in range(1,width): #height should be set to hieght of grid
+            #print k # used for debugging
+            if (grid[k] == 100):
+                point=Point()
+                point.x=j*cells.cell_width+.32 # edit for grid size
+                point.y=i*cells.cell_height-.15 # edit for grid size
+                point.z=0
+                cells.cells.append(point)
+            k=k+1
+        k=k+1
+        if (grid[k] == 100):
+            point=Point()
+            point.x=j*cells.cell_width+.62 # edit for grid size
+            point.y=i*cells.cell_height-.15 # edit for grid size
+            point.z=0
+            cells.cells.append(point)
+
+    #print cells # used for debugging
+    print "mapped"
+    wallpub.publish(cells)           
 
 def initAstar():
     
@@ -32,11 +79,16 @@ def initAstar():
     global wayPointPub
     global currWay_x
     global currWay_y
+    global mapData
+    global mapSub
+    global wallpub
     currWay_x = 0
     currWay_y = 0
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
     wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
+    mapsub = rospy.Subscriber("/grid_walls", OccupancyGrid, mapCallBack)
+    wallpub = rospy.Publisher("/expanded_map", GridCells, queue_size=1)
 
     # Use this object to get the robot's Odometry 
     sub = rospy.Subscriber('/odom', Odometry, readOdom)
@@ -68,6 +120,7 @@ def readOdom(msg):
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
 def AStar(xInit, yInit, xEnd, yEnd, width, height):
 
+    global mapData
     frontier = []
     checked = []
     unchecked = []
@@ -128,8 +181,8 @@ def AStar(xInit, yInit, xEnd, yEnd, width, height):
         curr_x = currentSquare.x
         curr_y = currentSquare.y
 
-        print "currX" , curr_x , "currY" , curr_y
-        print "g" , currentSquare.g, "h" , currentSquare.h , "f" , currentSquare.f
+        #print "currX" , curr_x , "currY" , curr_y
+        #print "g" , currentSquare.g, "h" , currentSquare.h , "f" , currentSquare.f
 
         #if the current cell is the goal
         if (curr_x == xEnd) and (curr_y == yEnd): 
@@ -444,7 +497,7 @@ def getDirection(x, y):
 def publishCells(grid,num):
     global ckd
     global front
-    print "publishing"
+    #print "publishing"
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
