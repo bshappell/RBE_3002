@@ -25,7 +25,7 @@ class GridSquare:
         self.cameFrom = cameFrom 
 
 class WallSquare:
-    def __init(self, x, y, wallVal):
+    def __init__(self, x, y, wallVal):
         self.x = x
         self.y = y
         self.wallVal = wallVal
@@ -602,11 +602,11 @@ def initializeWallList():
     global height 
     global wallList
     wallList = []
-
+    print "Hight" , height
+    print "width" , width
     for x in range(0,width):
         for y in range(0, height):
-            wallNode = WallSquare(x,y,0)
-            wallList.append(wallNode)
+            wallList.append( WallSquare(x,y,0))
 
 
 
