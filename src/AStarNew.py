@@ -161,7 +161,8 @@ def AStar(xInit, yInit, width, height):
     global mapData
     global xEnd
     global yEnd
-
+    xEnd = 2
+    yEnd = 2
     frontier = []
     checked = []
     unchecked = []
@@ -228,7 +229,7 @@ def AStar(xInit, yInit, width, height):
 
         #if the current cell is the goal
         if (curr_x == xEnd) and (curr_y == yEnd): 
-            print("goal reached!") 
+            print("goal found!") 
             
             #creates the goal node   
             originalCell = GridSquare(curr_x, curr_y, currentSquare.h, currentSquare.g, currentSquare.f, currentSquare.wallVal, currentSquare.cameFrom) 
@@ -364,10 +365,11 @@ def nodeAdd(givenList, givenNode):
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
     
-    global wallList
-    index = getIndexPlace(wallList, xVal, yVal)  
+    #global wallList
+    #index = getIndexPlace(wallList, xVal, yVal)  
     # return the wall value at this point
-    return wallList[index].wallVal  
+    #return wallList[index].wallVal  
+    return 0
 
 
 
@@ -411,7 +413,7 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
         #set x and y values for current cell
         curr_x = currentCell[0]
         curr_y = currentCell[1]
-        print "path x", curr_x , "path y" , curr_y
+        #print "path x", curr_x , "path y" , curr_y
         # get location of current cell in list
         currentIndex = getIndexPlace(checked, curr_x, curr_y)
         #set the next cell to be the came from cell of the current cell
@@ -440,7 +442,7 @@ def getNextWayPoint(width, height):
     else:
         yInit = yPos
 
-    print "xInit" , xInit, "yInit" , yInit
+    print "xPos" , xPos, "yPos" , yPos
 
     path = AStar(xInit, yInit, width, height)
     wayPoints = locateWayPointsLocations(path)
@@ -454,7 +456,7 @@ def getNextWayPoint(width, height):
     nextDir = directions[lengthDir - 1]
     currWay_x = nextWay[0]
     currWay_y = nextWay[1]
-    #print "nextX", nextWay[0] , "nextY" , nextWay[1]
+    print "nextX", nextWay[0] , "nextY" , nextWay[1]
     publishGoal(nextWay, nextDir)
     
 #publish next way point as poseStamped

@@ -233,7 +233,7 @@ if __name__ == '__main__':
     wayPointSub = rospy.Subscriber('waypoint', PoseStamped, getWayPoint)
 
     # Use this command to make the program wait for some seconds
-    rospy.sleep(rospy.Duration(1, 0))
+    #rospy.sleep(rospy.Duration(1, 0))
 
 
 
