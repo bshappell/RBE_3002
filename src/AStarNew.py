@@ -47,7 +47,7 @@ def mapCallBack(data):
     res = data.info.resolution
     #print data.info # used for debugging
     print "mapped"
-    updateWallList(mapData) # update global wall value list
+    #updateWallList(mapData) # update global wall value list
     publishWalls(mapgrid.data, res) # used for debugging
 	
 def publishWalls(grid,res):
@@ -341,11 +341,17 @@ def frontierGetMin(frontier):
 
 # goes through a list and returns the idex for the desired cell
 def getIndexPlace(listToSearch, xCoord, yCoord):
+    #print len(listToSearc)
+    global width
+    global height
+
+    #print "width: ", width, " height: ", height
     for i in range(len(listToSearch)):
         listItem = listToSearch[i]
         if( xCoord == listItem.x and yCoord == listItem.y):
             return i
     print "list Item Not Found" 
+    print "x: ", xCoord, " y: ", yCoord
     return -10
 
 #checks if a given x and y coordiante are in a given list
@@ -594,8 +600,8 @@ def updateWallList(grid):
 
     k = 0
 
-    for y in range(1,height): #height should be set to height of grid
-        for x in range(1,width): #height should be set to height of grid
+    for y in range(0,height-1): #height should be set to height of grid
+        for x in range(0,width-1): #height should be set to height of grid
             wallList.append(WallSquare(x,y,grid[k]))
             k=k+1
         k=k+1
