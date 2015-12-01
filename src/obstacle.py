@@ -56,7 +56,7 @@ def expandObstacles(map):
         for x in range(0, width):
             for y in range(0,height):
                 if(arrOfVals[x,y] == 100):
-                    for elements in resizeGrid:
+                    for element in resizeGrid:
                         index = (y + element[1]) * width + (x+element[0])
                         if(index >= 0 and index < len(tempData)):
                             tempData[index] = 100
