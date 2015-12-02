@@ -216,26 +216,33 @@ def AStar(xInit, yInit):
     if(getWallVal(xInit, yInit)):
         print "AHHHHHHHHHHHH current location is a wallll: ", getWallVal(xInit, yInit)
             
-
-    #print wall vals
-    for y in range(height):
-        print ""
-        print "new row: ", y
-        for x in range(width):
-            print getWallVal(x, y),
-            #if(getWallVal(x, y) == 0):            
-            #    print "x Val: ", x, "y Val: ", y, "wall val: ", getWallVal(x, y), 
+    print "x init: ", xInit, "y init", yInit
+    print "xinit, yinit index: ", getMapIndex(0,0)
 
     #get a list of all neighboring x and y coordiantes 
     neighbors = getNeighbors(xInit, yInit) 
-        
+
     for i in range(4):
+
         new_x = neighbors[i][0] 
         new_y = neighbors[i][1] 
         #print "new_x ", new_x, "new_y ",new_y
         #if in bounds (equal to zero less than width)
         if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
             print "xNeigh: ", new_x, "yNeigh: ", new_y, "wall val: ", getWallVal(new_x, new_y)
+
+    #print wall vals
+    for y in range(height-1):
+        print ""
+        print "new row: ", y
+        for x in range(width-1):
+            print getWallVal(x, y),
+            #if(getWallVal(x, y) == 0):            
+            #    print "x Val: ", x, "y Val: ", y, "wall val: ", getWallVal(x, y), 
+
+    
+        
+    
     
 
     #add a node for every x and y coordiate to the unchecked list
@@ -451,8 +458,10 @@ def getWallVal(xVal, yVal):
     #return wallList[index].wallVal  
     #return 0
 
-    global mapData
-    index = xVal + width*yVal # determine index of coordinates in list
+    #global mapData
+    #index = xVal + width*yVal # determine index of coordinates in list
+
+    index = getMapIndex(xVal,yVal)
     
     # determine if map data has been received yet
     if(len(mapData)):   
@@ -462,11 +471,17 @@ def getWallVal(xVal, yVal):
         return mapData[index]
     else:
         return 0
-    '''if(xVal == 30 and yVal == 30):
-        return 1
-    else:    
-        return 0 
-    return 0'''
+
+def getMapIndex(xVal,yVal):   
+
+    global width
+    global mapgrid
+     
+    # use 1 or 0.2 for resolution or 1 or 0.2
+    robotResolution = 1.0
+    a = (((yVal- mapgrid.info.origin.position.y) / robotResolution) * width)
+    a = a + ((xVal - mapgrid.info.origin.position.x) / robotResolution)
+    return int(round(a,2))
     
 
 
