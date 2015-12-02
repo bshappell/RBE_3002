@@ -115,7 +115,7 @@ def initAstar():
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
     wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
-    mapsub = rospy.Subscriber("/grid_walls", OccupancyGrid, mapCallBack)
+    mapsub = rospy.Subscriber('/finished', OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
     
     odom_list = tf.TransformListener()
@@ -228,17 +228,17 @@ def AStar(xInit, yInit):
         new_y = neighbors[i][1] 
         #print "new_x ", new_x, "new_y ",new_y
         #if in bounds (equal to zero less than width)
-        if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
-            print "xNeigh: ", new_x, "yNeigh: ", new_y, "wall val: ", getWallVal(new_x, new_y)
+        #if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
+        print "xNeigh: ", new_x, "yNeigh: ", new_y, "wall val: ", getWallVal(new_x, new_y)
 
     #print wall vals
-    for y in range(height-1):
+    '''for y in range(height-1):
         print ""
         print "new row: ", y
         for x in range(width-1):
             print getWallVal(x, y),
             #if(getWallVal(x, y) == 0):            
-            #    print "x Val: ", x, "y Val: ", y, "wall val: ", getWallVal(x, y), 
+            #    print "x Val: ", x, "y Val: ", y, "wall val: ", getWallVal(x, y), '''
 
     
         
@@ -246,8 +246,8 @@ def AStar(xInit, yInit):
     
 
     #add a node for every x and y coordiate to the unchecked list
-    for x in range(width):
-        for y in range(height):
+    for x in range(width/2):
+        for y in range(height/2):
             unchecked.append(GridSquare(x, y, 0, 0, 0, 0, (0,0)))
 
     #add the wall value for every Grid Square
@@ -440,6 +440,7 @@ def nodeRemove(givenList, xCoord, yCoord):
         return givenList
     else:
         print "item not in list"
+        print "x Val: ", xCoord, " y coord: ", yCoord
         return givenList
 
 #adds given node to given list
@@ -449,14 +450,6 @@ def nodeAdd(givenList, givenNode):
 
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
-    
-    #global wallList
-    #index = getIndexPlace(wallList, xVal, yVal)  
-    # return the wall value at this point
-    #if (index == -10):
-    #    return -1
-    #return wallList[index].wallVal  
-    #return 0
 
     #global mapData
     #index = xVal + width*yVal # determine index of coordinates in list
@@ -465,10 +458,11 @@ def getWallVal(xVal, yVal):
     
     # determine if map data has been received yet
     if(len(mapData)):   
-        #if(mapData[index] != -1):
+        if(0 <= index < len(mapData)):
          #   print "xVal: ", xVal, "yVal: ", yVal, "wallVal: " , mapData[index]     
-        
-        return mapData[index]
+            return mapData[index]
+        else:
+            return 0
     else:
         return 0
 
@@ -478,7 +472,7 @@ def getMapIndex(xVal,yVal):
     global mapgrid
      
     # use 1 or 0.2 for resolution or 1 or 0.2
-    robotResolution = 1.0
+    robotResolution = 0.2
     a = (((yVal- mapgrid.info.origin.position.y) / robotResolution) * width)
     a = a + ((xVal - mapgrid.info.origin.position.x) / robotResolution)
     return int(round(a,2))
@@ -576,6 +570,7 @@ def getNextWayPoint():
     currWay_x = nextWay[0]
     currWay_y = nextWay[1]
     print "nextX", nextWay[0] , "nextY" , nextWay[1]
+    print "publishhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh goaaaaaaaaaaaaaallllllllllllllllllllllllllllllllllllllllll"
     publishGoal(nextWay, nextDir)
     
 #publish next way point as poseStamped
@@ -589,6 +584,7 @@ def publishGoal(location, direction):
     goal.pose.position.z = 0
     (w, x, y, z) = quaternion_from_euler(0, 0, direction)
     goal.pose.orientation = Quaternion(w, x, y, z)
+    print "publishing goaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalllllllllllllllllllllllllllllllllllllllllllllllllll"
     wayPointPub.publish(goal)
 
 #locate WayPoints
@@ -687,23 +683,6 @@ def publishCells(grid,num):
     if(num == 2):
         front.publish(cells)
 
-
-
-# updates global wall list to store the occupancy values of the surrounding grid
-def updateWallList(grid):
-    
-    global wallList
-    global height
-    global width   
-    wallList = []
-
-    k = 0
-
-    for y in range(0,height-1): #height should be set to height of grid
-        for x in range(0,width-1): #height should be set to height of grid
-            wallList.append(WallSquare(x,y,grid[k]))
-            k=k+1
-        k=k+1
 
 def runAstar():
 

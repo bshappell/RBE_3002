@@ -222,7 +222,7 @@ if __name__ == '__main__':
     global odom_list
     
     pub = rospy.Publisher('cmd_vel_mux/input/teleop', Twist, queue_size=1) # Publisher for commanding robot motion
-    bumper_sub = rospy.Subscriber('/mobile_base/events/bumper', BumperEvent, readBumper, queue_size=1) # Callback function to handle bumper events
+    #bumper_sub = rospy.Subscriber('/mobile_base/events/bumper', BumperEvent, readBumper, queue_size=1) # Callback function to handle bumper events
 
     # Use this object to get the robot's Odometry 
     sub = rospy.Subscriber('/odom', Odometry, readOdom)
