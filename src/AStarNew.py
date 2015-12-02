@@ -110,8 +110,6 @@ def initAstar():
     wallList = []
     width = 5
     height = 5
-    currWay_x = 2
-    currWay_y = 2
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
     wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
@@ -127,6 +125,8 @@ def initAstar():
     #originally sets goal to be the start position
     xEnd = 0
     yEnd = 0
+    currWay_x = xEnd
+    currWay_y = yEnd
 
     # Use this object to get the robot's Odometry 
     #sub = rospy.Subscriber('/odom', Odometry, readOdom)
@@ -146,6 +146,8 @@ def readOdom(msg):
     global xPos
     global yPos
     global theta
+    global width
+    global height
     # odom list wait for transform
     odom_list.waitForTransform('map', 'base_footprint', rospy.Time(0), rospy.Duration(1.0))
     (position, orientation) = odom_list.lookupTransform('map', 'base_footprint', rospy.Time(0))
@@ -153,32 +155,14 @@ def readOdom(msg):
     #pose.position.y = position[1]
     xPos = position[0]
     yPos = position[1]
-    xPos = int(xPos * 5)
-    yPos = int(yPos * 5)
+    xPos = int(xPos * 5) + int(width/2)
+    yPos = int(yPos * 5) + int(height/2)
+    print "reaaaaaddddddddddddddddddddddddddddddddd oooooooooodddddddddddddddddddooooooooooooonnnnnnnnnnnnnnnnnnnnn"
     odomW = orientation
     q = [odomW[0], odomW[1], odomW[2], odomW[3]]
     roll,pitch,yaw = euler_from_quaternion(q)
     theta = yaw#math.degrees(yaw)
-    #pose.orientation.z = yaw
-    #print "in readOdom!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
-    # fire on timer
-    #global pose
-    #global odom_tf
-    #pose = msg.pose
-    #geo_quat = pose.pose.orientation
-
-    '''px = msg.pose.pose.position.x
-    py = msg.pose.pose.position.y
-    quat = msg.pose.pose.orientation
-    q = [quat.x, quat.y, quat.z, quat.w]
-    roll, pitch, yaw = euler_from_quaternion(q)
-    global xPos
-    global yPos
-    global theta
-    xPos = int(px)
-    yPos = int(py) 
-    theta = yaw   #Determine theta. '''
 
 #Pose Callback Function.
 def readPose(msg):
@@ -190,10 +174,13 @@ def readPose(msg):
     roll, pitch, yaw = euler_from_quaternion(q)
     global xEnd
     global yEnd
+    global width
+    global height
     global thetaPose
-    xEnd = int(px)
-    yEnd = int(py)
+    xEnd = int(px * 5) + int(width/2)
+    yEnd = int(py * 5) + int(height/2)
     thetaPose = yaw   #Determine theta.	
+    print "updaaaaaaaaaaaaaaaaaaaaaaaaattttttttttttttttttttttttttttttttttttttttreeeeeeeeeeeeeeeeedddddddddddddddddddddddddddd ggggggggggggggggggoaaaaaaaaaaaaaaaaaaaaaaaaalllllllllll"
 
 
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
@@ -204,8 +191,6 @@ def AStar(xInit, yInit):
     global yEnd
     global width
     global height
-    xEnd = 8
-    yEnd = 5
     frontier = []
     checked = []
     unchecked = []
@@ -242,7 +227,7 @@ def AStar(xInit, yInit):
 
     
         
-    
+    print "xEnd: ", xEnd, " yEnd: ", yEnd
     
 
     #add a node for every x and y coordiate to the unchecked list
@@ -543,6 +528,8 @@ def getNextWayPoint():
     global yPos 
     global currWay_x
     global currWay_y  
+    global width
+    global height
 
     if((currWay_x - .5) < xPos < (currWay_x + .5)):
         xInit = currWay_x
