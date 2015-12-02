@@ -125,8 +125,8 @@ def initAstar():
     #pose = Pose()  
         
     #originally sets goal to be the start position
-    xEnd = 2
-    yEnd = 2
+    xEnd = 0
+    yEnd = 0
 
     # Use this object to get the robot's Odometry 
     #sub = rospy.Subscriber('/odom', Odometry, readOdom)
@@ -151,13 +151,16 @@ def readOdom(msg):
     (position, orientation) = odom_list.lookupTransform('map', 'base_footprint', rospy.Time(0))
     #pose.position.x = position[0]
     #pose.position.y = position[1]
-    xPos = int(position[0])
-    yPos = int(position[1])
+    xPos = position[0]
+    yPos = position[1]
+    xPos = int(xPos * 5)
+    yPos = int(yPos * 5)
     odomW = orientation
     q = [odomW[0], odomW[1], odomW[2], odomW[3]]
     roll,pitch,yaw = euler_from_quaternion(q)
     theta = yaw#math.degrees(yaw)
     #pose.orientation.z = yaw
+    #print "in readOdom!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
     # fire on timer
     #global pose
@@ -201,15 +204,27 @@ def AStar(xInit, yInit):
     global yEnd
     global width
     global height
-    xEnd = 1
-    yEnd = 1
+    xEnd = 8
+    yEnd = 5
     frontier = []
     checked = []
     unchecked = []
 
+    print "width: ", width, " height: ", height
+
     # determine if current position is considered to be a wall
     if(getWallVal(xInit, yInit)):
         print "AHHHHHHHHHHHH current location is a wallll: ", getWallVal(xInit, yInit)
+            
+
+    #print wall vals
+    for y in range(height):
+        print ""
+        print "new row: ", y
+        for x in range(width):
+            print getWallVal(y, x),
+            #if(getWallVal(x, y) == 0):            
+            #    print "x Val: ", x, "y Val: ", y, "wall val: ", getWallVal(x, y), 
 
     #get a list of all neighboring x and y coordiantes 
     neighbors = getNeighbors(xInit, yInit) 
@@ -436,7 +451,7 @@ def getWallVal(xVal, yVal):
     #return wallList[index].wallVal  
     #return 0
 
-    '''global mapData
+    global mapData
     index = xVal + width*yVal # determine index of coordinates in list
     
     # determine if map data has been received yet
@@ -446,12 +461,12 @@ def getWallVal(xVal, yVal):
         
         return mapData[index]
     else:
-        return 0'''
+        return 0
     '''if(xVal == 30 and yVal == 30):
         return 1
     else:    
-        return 0 '''
-    return 0
+        return 0 
+    return 0'''
     
 
 
@@ -531,6 +546,7 @@ def getNextWayPoint():
 
     print "xPos" , xPos, "yPos" , yPos
     print "curr X way: ", currWay_x, "curr y way: ", currWay_y
+    print "xInit" , xInit, "yInit" , yInit
 
     path = AStar(xInit, yInit)
     wayPoints = locateWayPointsLocations(path)

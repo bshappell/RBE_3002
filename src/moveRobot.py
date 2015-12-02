@@ -90,8 +90,8 @@ def readOdom(msg):
     pose = msg.pose
     geo_quat = pose.pose.orientation
   
-    odom_tf.sendTransform((pose.pose.position.x, pose.pose.position.y, 0),
-        (pose.pose.orientation.x, pose.pose.orientation.y,pose.pose.orientation.z,pose.pose.orientation.w),rospy.Time.now(),"base_footprint","odom")
+    #odom_tf.sendTransform((pose.pose.position.x, pose.pose.position.y, 0),
+       # (pose.pose.orientation.x, pose.pose.orientation.y,pose.pose.orientation.z,pose.pose.orientation.w),rospy.Time.now(),"base_footprint","odom")
 
     px = msg.pose.pose.position.x
     py = msg.pose.pose.position.y
@@ -103,6 +103,8 @@ def readOdom(msg):
     global theta
     xPos = px
     yPos = py
+    xPos = int(xPos * 5)
+    yPos = int(yPos * 5)
     #theta = math.degrees(yaw)
     theta = yaw
 
