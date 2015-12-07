@@ -200,7 +200,7 @@ def AStar(xInit, yInit):
 
     #line added to get sign off, remove to fix code
     xEnd = 25
-    yEnd = 48
+    yEnd = 25
 
     print "width: ", width, " height: ", height
 
@@ -247,10 +247,10 @@ def AStar(xInit, yInit):
         currentNode = unchecked[i]
         unchecked[i].wallVal = getWallVal(currentNode.x, currentNode.y)
     
-    #add a heuristic value for every node
+    '''#add a heuristic value for every node
     for i in range(len(unchecked)):
         currentNode = unchecked[i]
-        unchecked[i].h = getHeuristic(xEnd, yEnd, currentNode.x, currentNode.y)
+        unchecked[i].h = getHeuristic(xEnd, yEnd, currentNode.x, currentNode.y)'''
 
 	# starting x and y are the current coordinates
     curr_x = xInit
@@ -285,7 +285,7 @@ def AStar(xInit, yInit):
     
     print "frontier length" , len(frontier)
     while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
-        #print "here"
+        print "here"
         #gets the most likely node from frontier and removes it from frontier
         currentSquare = frontierGetMin(frontier) 
         
@@ -328,7 +328,7 @@ def AStar(xInit, yInit):
                     index = getIndexPlace(unchecked, new_x, new_y)
 
                     #if the node is not a wall
-                    if unchecked[index].wallVal == False:    
+                    if unchecked[index].wallVal == 0:    
                         
 				        #set the came from value for the new cell
                         new_cameFrom = (curr_x, curr_y)
@@ -357,12 +357,9 @@ def AStar(xInit, yInit):
                         unchecked = nodeRemove(unchecked, new_x, new_y)
 
                     else:
-                        print currentNode.h,
-                        currentNode.h *= 2
-                        print currentNode.h,
-                        wallBuddies.append(currentNode)
+                        
+                        wallBuddies.append(currentCell)
                         publishCells(wallBuddies,4) 
-                        print "added bud"
 
                 elif itemExists(checked, new_x, new_y):
 
@@ -575,8 +572,6 @@ def getNextWayPoint():
     else:
         yInit = yEnd
 
-    xInit = 3 
-    yInit = 3
     #print "xPos" , xPos, "yPos" , yPos
     print "curr X way: ", currWay_x, "curr y way: ", currWay_y
     print "xInit" , xInit, "yInit" , yInit
@@ -689,14 +684,14 @@ def publishCells(grid,num):
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
-    cells.cell_width = 0.2 # edit for grid size .3 for simple map
-    cells.cell_height = 0.2 # edit for grid size
+    cells.cell_width = 0.3 # edit for grid size .3 for simple map
+    cells.cell_height = 0.3 # edit for grid size
 
     for square in grid: #height should be set to hieght of grid
             #print k # used for debugging
             point=Point()
-            point.x=square.x*cells.cell_width+cells.cell_width # edit for grid size
-            point.y=square.y*cells.cell_height+cells.cell_width # edit for grid size
+            point.x=square.x*cells.cell_width+.32 # edit for grid size
+            point.y=square.y*cells.cell_height-.15 # edit for grid size
             point.z=0
             cells.cells.append(point)
 
