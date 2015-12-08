@@ -200,7 +200,7 @@ def AStar(xInit, yInit):
 
     #line added to get sign off, remove to fix code
     xEnd = 25
-    yEnd = 48
+    yEnd = 9
 
     print "width: ", width, " height: ", height
 
@@ -284,7 +284,7 @@ def AStar(xInit, yInit):
     unchecked = nodeRemove(unchecked, curr_x, curr_y)
     
     print "frontier length" , len(frontier)
-    while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
+    while(len(frontier)and not rospy.is_shutdown()): # while there are still nodes that have not been checked, continually run the algorithm
         #print "here"
         #gets the most likely node from frontier and removes it from frontier
         currentSquare = frontierGetMin(frontier) 
@@ -362,7 +362,7 @@ def AStar(xInit, yInit):
                         print currentNode.h,
                         wallBuddies.append(currentNode)
                         publishCells(wallBuddies,4) 
-                        print "added bud"
+                        print len(wallBuddies)
 
                 elif itemExists(checked, new_x, new_y):
 
@@ -523,7 +523,7 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
     Path = []
     currentCell = (xEnd, yEnd)
     # while the path is not back home yet
-    while currentCell[0] != xInit or currentCell[1] != yInit:
+    while currentCell[0] != xInit or currentCell[1] != yInit :
         #set x and y values for current cell
         curr_x = currentCell[0]
         curr_y = currentCell[1]
