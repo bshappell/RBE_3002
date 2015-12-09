@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+#What do we need in initAStar?
+
 import math 
 import numpy
 import rospy
@@ -45,12 +47,14 @@ def mapCallBack(data):
     #print "mapped"
     #updateWallList(mapData) # update global wall value list
     publishWalls(mapgrid.data, res) # used for debugging
+    print getWallVal(0,0)
 	
 def publishWalls(grid,res):
     #print "publishing"
     global wallpub
     global width
     global height
+    global wallList
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
@@ -62,9 +66,10 @@ def publishWalls(grid,res):
             #print k # used for debugging
             if (grid[k] == 100):
                 point=Point()
-                point.x=j*cells.cell_width+.32 # edit for grid size
-                point.y=i*cells.cell_height-.15 # edit for grid size
+                point.x=j*cells.cell_width # edit for grid size
+                point.y=i*cells.cell_height # edit for grid size
                 point.z=0
+                wallList.append((j-1,i-1))
                 cells.cells.append(point)
             k=k+1
         k=k+1
@@ -75,6 +80,7 @@ def publishWalls(grid,res):
             point.z=0
             cells.cells.append(point)
 
+        set(wallList)
     #print cells # used for debugging
     print "mapped"
     wallpub.publish(cells)           
@@ -92,25 +98,37 @@ def initAstar():
     mapData = []
     global mapSub
     global wallpub
-    global xEnd
-    global yEnd
-    global xPos
-    global yPos
-    xPos = 0
-    yPos = 0
+    global bud
+    global xOdom
+    global yOdom
+    global xClickPose
+    global yClickPose 
+    global currWayx
+    global currWayy 
+    global xOffset
+    global yOffset 
     global width
-    global height 
+    global height
     global wallList
     global odom_tf
     global odom_list
+    xOdom = 0
+    yOdom = 0
+    xClickPose = 0
+    yClickPose = 0
+    currWayx = 0
+    currWayy = 0
+    xOffset = 0
+    yOffset = 0
+    width = 10
+    height = 10
     wallList = []
-    width = 5
-    height = 5
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
     wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
     mapsub = rospy.Subscriber('/finished', OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
+    bud = rospy.Publisher('/edge', GridCells, queue_size=1)
     
     odom_list = tf.TransformListener()
 
@@ -139,8 +157,8 @@ def initAstar():
 #Odometry Callback function.
 def readOdom(msg):
     global pose
-    global xPos
-    global yPos
+    global xOdom
+    global yOdom
     global theta
     global width
     global height
@@ -149,11 +167,10 @@ def readOdom(msg):
     (position, orientation) = odom_list.lookupTransform('map', 'base_footprint', rospy.Time(0))
     #pose.position.x = position[0]
     #pose.position.y = position[1]
-    xPos = position[0]
-    yPos = position[1]
-    xPos = int(xPos * 5) + int(width/2)
-    yPos = int(yPos * 5) + int(height/2)
-    #print "reaaaaaddddddddddddddddddddddddddddddddd oooooooooodddddddddddddddddddooooooooooooonnnnnnnnnnnnnnnnnnnnn"
+    xOdom = position[0]
+    yOdom = position[1]
+    #xPos = int(xPos * 5) + int(width/2)
+    #yPos = int(yPos * 5) + int(height/2)
     odomW = orientation
     q = [odomW[0], odomW[1], odomW[2], odomW[3]]
     roll,pitch,yaw = euler_from_quaternion(q)
@@ -163,47 +180,38 @@ def readOdom(msg):
 #Pose Callback Function.
 def readPose(msg):
 
-    px = msg.pose.position.x
-    py = msg.pose.position.y
+    #px = msg.pose.position.x
+    #py = msg.pose.position.y
     quat = msg.pose.orientation
     q = [quat.x, quat.y, quat.z, quat.w]
     roll, pitch, yaw = euler_from_quaternion(q)
-    global xEnd
-    global yEnd
-    global width
-    global height
+    global xClickPose
+    global yClickPose
     global thetaPose
-    xEnd = int(px * 5) + int(width/2)
-    yEnd = int(py * 5) + int(height/2)
+    xClickPose = msg.pose.position.x
+    yClickPose = msg.pose.position.y
+    #xEnd = int(px * 5) + int(width/2)
+    #yEnd = int(py * 5) + int(height/2)
     thetaPose = yaw   #Determine theta.	
-    #print "updaaaaaaaaaaaaaaaaaaaaaaaaattttttttttttttttttttttttttttttttttttttttreeeeeeeeeeeeeeeeedddddddddddddddddddddddddddd ggggggggggggggggggoaaaaaaaaaaaaaaaaaaaaaaaaalllllllllll"
 
 
 #it's recommended that start is a poseStamped msg and goal is a pose msg, RViz likes using that for visualization.
-def AStar(xInit, yInit):
+def AStar(xInit, yInit, xEnd, yEnd, AWidth, AHeight):
 
     global mapData
-    #global xEnd
-    #global yEnd
-    global width
-    global height
     frontier = []
     checked = []
     unchecked = []
+    wallBuddies = []
 
-    #line added to get sign off, remove to fix code
-    xEnd = 2
-    yEnd = 2
-
-    print "width: ", width, " height: ", height
+    print "Awidth: ", AWidth, " AHeight: ", AHeight
+    print "xEnd: ", xEnd, " yEnd: ", yEnd
+    print "x init: ", xInit, "y init", yInit
 
     # determine if current position is considered to be a wall
     if(getWallVal(xInit, yInit)):
         print "AHHHHHHHHHHHH current location is a wallll: ", getWallVal(xInit, yInit)
             
-    print "x init: ", xInit, "y init", yInit
-    #print "xinit, yinit index: ", getMapIndex(0,0)
-
     #get a list of all neighboring x and y coordiantes 
     neighbors = getNeighbors(xInit, yInit) 
 
@@ -216,23 +224,9 @@ def AStar(xInit, yInit):
         #if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
         print "xNeigh: ", new_x, "yNeigh: ", new_y, "wall val: ", getWallVal(new_x, new_y)
 
-    #print wall vals
-    '''for y in range(height-1):
-        print ""
-        print "new row: ", y
-        for x in range(width-1):
-            print getWallVal(x, y),
-            #if(getWallVal(x, y) == 0):            
-            #    print "x Val: ", x, "y Val: ", y, "wall val: ", getWallVal(x, y), '''
-
-    
-        
-    print "xEnd: ", xEnd, " yEnd: ", yEnd
-    
-
     #add a node for every x and y coordiate to the unchecked list
-    for x in range(width):
-        for y in range(height):
+    for x in range(AWidth):
+        for y in range(AHeight):
             unchecked.append(GridSquare(x, y, 0, 0, 0, 0, (0,0)))
 
     #add the wall value for every Grid Square
@@ -240,10 +234,10 @@ def AStar(xInit, yInit):
         currentNode = unchecked[i]
         unchecked[i].wallVal = getWallVal(currentNode.x, currentNode.y)
     
-    '''#add a heuristic value for every node
+    #add a heuristic value for every node
     for i in range(len(unchecked)):
         currentNode = unchecked[i]
-        unchecked[i].h = getHeuristic(xEnd, yEnd, currentNode.x, currentNode.y)'''
+        unchecked[i].h = getHeuristic(xEnd, yEnd, currentNode.x, currentNode.y)
 
 	# starting x and y are the current coordinates
     curr_x = xInit
@@ -277,8 +271,7 @@ def AStar(xInit, yInit):
     unchecked = nodeRemove(unchecked, curr_x, curr_y)
     
     print "frontier length" , len(frontier)
-    while(len(frontier)): # while there are still nodes that have not been checked, continually run the algorithm
-        print "here"
+    while(len(frontier)and not rospy.is_shutdown()): # while there are still nodes that have not been checked, continually run the algorithm
         #gets the most likely node from frontier and removes it from frontier
         currentSquare = frontierGetMin(frontier) 
         
@@ -310,9 +303,9 @@ def AStar(xInit, yInit):
         for i in range(4):
             new_x = neighbors[i][0] 
             new_y = neighbors[i][1] 
-            #print "new_x ", new_x, "new_y ",new_y
+            
             #if in bounds (equal to zero less than width)
-            if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
+            if 0 <= new_x and new_x < AWidth and 0 <= new_y and new_y < AHeight:
                     
                 #if the node is unchecked
                 if itemExists(unchecked, new_x, new_y):
@@ -321,7 +314,7 @@ def AStar(xInit, yInit):
                     index = getIndexPlace(unchecked, new_x, new_y)
 
                     #if the node is not a wall
-                    if unchecked[index].wallVal == 0:    
+                    if unchecked[index].wallVal == False:    
                         
 				        #set the came from value for the new cell
                         new_cameFrom = (curr_x, curr_y)
@@ -348,7 +341,14 @@ def AStar(xInit, yInit):
 
                         #remove cell from unchecked
                         unchecked = nodeRemove(unchecked, new_x, new_y)
-                        
+
+                    else:
+                        #print currentNode.h,
+                        currentNode.h += 2
+                        #print currentNode.h,
+                        wallBuddies.append(currentNode)
+                        publishCells(wallBuddies,4) 
+                        #print len(wallBuddies)
 
                 elif itemExists(checked, new_x, new_y):
 
@@ -392,8 +392,6 @@ def frontierGetMin(frontier):
     return nextNode
     
 
-
-
 # goes through a list and returns the idex for the desired cell
 def getIndexPlace(listToSearch, xCoord, yCoord):
     #print len(listToSearc)
@@ -436,24 +434,15 @@ def nodeAdd(givenList, givenNode):
 
 # gets the wall value for the given x and y coordinates and returns the correct value
 def getWallVal(xVal, yVal):
-
-    #global mapData
-    #index = xVal + width*yVal # determine index of coordinates in list
-
-    '''index = getMapIndex(xVal,yVal)
-    
-    # determine if map data has been received yet
-    if(len(mapData)):   
-        if(0 <= index < len(mapData)):
-         #   print "xVal: ", xVal, "yVal: ", yVal, "wallVal: " , mapData[index]     
-            return mapData[index]
-        else:
-            return 0
-    else:
-        return 0'''
-    return 0
-
-'''def getMapIndex(xVal,yVal):   
+    global wallList
+    #print wallList
+    for set in wallList:
+        if(set[0] == xVal and set[1] == yVal):
+            return True
+    return False
+ 
+#gets the map index value
+def getMapIndex(xVal,yVal):   
 
     global width
     global mapgrid
@@ -462,19 +451,16 @@ def getWallVal(xVal, yVal):
     robotResolution = 0.2
     a = (((yVal- mapgrid.info.origin.position.y) / robotResolution) * width)
     a = a + ((xVal - mapgrid.info.origin.position.x) / robotResolution)
-    return int(round(a,2))'''
+    return int(round(a,2))
     
-
-
-
 
 #takes in the x and y value of a node and the end x and y value and returns the correct heurisitic
 def getHeuristic(xEnd, yEnd, xGiven, yGiven):
     
     xDist = xEnd - xGiven
     yDist = yEnd - yGiven
-    hVal = abs(xDist) + abs(yDist)
-    #hVal = math.sqrt(xDist**2 + yDist**2)
+    #hVal = abs(xDist) + abs(yDist)
+    hVal = math.sqrt(xDist**2 + yDist**2)
     return hVal
 
 #returns a list of the tuples for all the neighbor x and y values
@@ -504,7 +490,7 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
     Path = []
     currentCell = (xEnd, yEnd)
     # while the path is not back home yet
-    while currentCell[0] != xInit or currentCell[1] != yInit:
+    while currentCell[0] != xInit or currentCell[1] != yInit :
         #set x and y values for current cell
         curr_x = currentCell[0]
         curr_y = currentCell[1]
@@ -526,54 +512,51 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
 #run's A* to get the path from start to goal, Finds the locations and directions of each waypoint, calls publish gaol to publish the next way point as a poseStamped
 def getNextWayPoint():  
 
-    global xPos
-    global yPos
-    global xEnd 
-    global yEnd 
-    global currWay_x
-    global currWay_y  
+    global xOdom
+    global yOdom
+    global xClickPose
+    global yClickPose 
+    global currWayx
+    global currWayy 
+    global xOffset
+    global yOffset 
     global width
     global height
 
+    AEndGoalx = int((xClickPose + xOffset) * 5)
+    AEndGoaly = int((yClickPose + yOffset) * 5)
+    AWayx = int((currWayx + xOffset) * 5)
+    AWayy = int((currWayy + yOffset) * 5)
+    ARoPosx = (xOdom + xOffset) * 5
+    ARoPosy = (yOdom + yOffset) * 5
+    AWidth = width
+    AHeight = height
 
-    
-
-    '''if((currWay_x - .5) < xPos < (currWay_x + .5)):
-        xInit = currWay_x
+    if((AWayx - .5) < ARoPosx < (AWayx + .5)):
+        AInitx = AWayx
     else:
-        xInit = xPos
-    if((currWay_y - .5) < yPos < (currWay_y + .5)):
-        yInit = currWay_y
+        AInitx = int(ARoPosx)
+    if((AWayy - .5) < ARoPosy < (AWayy + .5)):
+        AInity = AWayy
     else:
-        yInit = yPos'''
+        AInity = int(ARoPosy)
+ 
+    print "A* Initial X:", AInitx , "A* Initial Y:" , AInity
 
-    if((currWay_x - .5) < xEnd < (currWay_x + .5)):
-        xInit = currWay_x
-    else:
-        xInit = xEnd
-    if((currWay_y - .5) < yEnd < (currWay_y + .5)):
-        yInit = currWay_y
-    else:
-        yInit = yEnd
-
-    #print "xPos" , xPos, "yPos" , yPos
-    print "curr X way: ", currWay_x, "curr y way: ", currWay_y
-    print "xInit" , xInit, "yInit" , yInit
-
-    path = AStar(xInit, yInit)
-    wayPoints = locateWayPointsLocations(path)
-    directions = locateWayPointsDirections(path)
-    lengthWay = len(wayPoints)
-    lengthDir = len(directions)
+    path = AStar(AInitx, AInity, AEndGoalx, AEndGoaly, AWidth, AHeight)
+    AWayPoints = locateWayPointsLocations(path)
+    ADirections = locateWayPointsDirections(path)
+    lengthWay = len(AWayPoints)
+    lengthDir = len(ADirections)
     if (lengthWay < 1 or lengthDir <1):
         print "at the goal"
         return 1
-    nextWay = wayPoints[lengthWay - 1]
-    nextDir = directions[lengthDir - 1]
-    currWay_x = nextWay[0]
-    currWay_y = nextWay[1]
-    print "nextWayX", nextWay[0] , "nextWayY" , nextWay[1]
-    #print "publishhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh goaaaaaaaaaaaaaallllllllllllllllllllllllllllllllllllllllll"
+    ANextWay = AWayPoints[lengthWay - 1]
+    ANextDir = ADirections[lengthDir - 1]    
+    currWayx = (ANextWay[0] - xOffset) / 5
+    currWayy = (ANextWay[1] - xOffset) / 5
+    nextDir = ANextDir
+    nextWay = (currWayx , currWayy)
     publishGoal(nextWay, nextDir)
     
 #publish next way point as poseStamped
@@ -587,7 +570,6 @@ def publishGoal(location, direction):
     goal.pose.position.z = 0
     (w, x, y, z) = quaternion_from_euler(0, 0, direction)
     goal.pose.orientation = Quaternion(w, x, y, z)
-    #print "publishing goaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalllllllllllllllllllllllllllllllllllllllllllllllllll"
     wayPointPub.publish(goal)
 
 #locate WayPoints
@@ -610,7 +592,7 @@ def locateWayPointsLocations(path):
 
     return listWay
 
-#locate WayPoints
+#locate Directions at each wayPoint
 def locateWayPointsDirections(path):
 
     listOfDirections = []
@@ -662,19 +644,20 @@ def getDirection(x, y):
 #num is designating whether it is a 2-front, 1-checked, or 100-wall
 def publishCells(grid,num):
     global ckd
+    global bud
     global front
     #print "publishing"
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
-    cells.cell_width = 0.3 # edit for grid size .3 for simple map
-    cells.cell_height = 0.3 # edit for grid size
+    cells.cell_width = 0.2 # edit for grid size .3 for simple map
+    cells.cell_height = 0.2 # edit for grid size
 
     for square in grid: #height should be set to hieght of grid
             #print k # used for debugging
             point=Point()
-            point.x=square.x*cells.cell_width+.32 # edit for grid size
-            point.y=square.y*cells.cell_height-.15 # edit for grid size
+            point.x=square.x*cells.cell_width+cells.cell_width # edit for grid size
+            point.y=square.y*cells.cell_height+cells.cell_width # edit for grid size
             point.z=0
             cells.cells.append(point)
 
@@ -685,6 +668,8 @@ def publishCells(grid,num):
         ckd.publish(cells)
     if(num == 2):
         front.publish(cells)
+    if(num == 4):
+        bud.publish(cells)
 
 
 def runAstar():
