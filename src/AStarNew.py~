@@ -114,8 +114,8 @@ def initAstar():
     global odom_list
     xOdom = 0
     yOdom = 0
-    xClickPose = 0
-    yClickPose = 0
+    xClickPose = 1
+    yClickPose = 1
     currWayx = 0
     currWayy = 0
     xOffset = 0
@@ -125,7 +125,7 @@ def initAstar():
     wallList = []
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
-    wayPointPub = rospy.Publisher('waypoint', PoseStamped, queue_size=1)
+    wayPointPub = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=1)
     mapsub = rospy.Subscriber('/finished', OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
     bud = rospy.Publisher('/edge', GridCells, queue_size=1)
@@ -136,11 +136,6 @@ def initAstar():
     rospy.Timer(rospy.Duration(0.1), readOdom) 
     #pose = Pose()  
         
-    #originally sets goal to be the start position
-    xEnd = 0
-    yEnd = 0
-    currWay_x = 2
-    currWay_y = 2
 
     # Use this object to get the robot's Odometry 
     #sub = rospy.Subscriber('/odom', Odometry, readOdom)
@@ -222,7 +217,7 @@ def AStar(xInit, yInit, xEnd, yEnd, AWidth, AHeight):
         #print "new_x ", new_x, "new_y ",new_y
         #if in bounds (equal to zero less than width)
         #if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
-        print "xNeigh: ", new_x, "yNeigh: ", new_y, "wall val: ", getWallVal(new_x, new_y)
+        #print "xNeigh: ", new_x, "yNeigh: ", new_y, "wall val: ", getWallVal(new_x, new_y)
 
     #add a node for every x and y coordiate to the unchecked list
     for x in range(AWidth):
@@ -270,7 +265,6 @@ def AStar(xInit, yInit, xEnd, yEnd, AWidth, AHeight):
     #remove starting cell from unchecked
     unchecked = nodeRemove(unchecked, curr_x, curr_y)
     
-    print "frontier length" , len(frontier)
     while(len(frontier)and not rospy.is_shutdown()): # while there are still nodes that have not been checked, continually run the algorithm
         #gets the most likely node from frontier and removes it from frontier
         currentSquare = frontierGetMin(frontier) 
@@ -459,8 +453,8 @@ def getHeuristic(xEnd, yEnd, xGiven, yGiven):
     
     xDist = xEnd - xGiven
     yDist = yEnd - yGiven
-    #hVal = abs(xDist) + abs(yDist)
-    hVal = math.sqrt(xDist**2 + yDist**2)
+    hVal = abs(xDist) + abs(yDist)
+    #hVal = math.sqrt(xDist**2 + yDist**2)
     return hVal
 
 #returns a list of the tuples for all the neighbor x and y values
@@ -506,7 +500,7 @@ def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
 
     initCell = (xInit, yInit)
     Path.append(initCell)
-    print "Path", Path
+    #print "Path", Path
     return Path
 
 #run's A* to get the path from start to goal, Finds the locations and directions of each waypoint, calls publish gaol to publish the next way point as a poseStamped
@@ -542,6 +536,7 @@ def getNextWayPoint():
         AInity = int(ARoPosy)
  
     print "A* Initial X:", AInitx , "A* Initial Y:" , AInity
+    print "A* robot Pos x" , ARoPosx, "A* robot Pos y" , ARoPosy
 
     path = AStar(AInitx, AInity, AEndGoalx, AEndGoaly, AWidth, AHeight)
     AWayPoints = locateWayPointsLocations(path)
@@ -553,10 +548,13 @@ def getNextWayPoint():
         return 1
     ANextWay = AWayPoints[lengthWay - 1]
     ANextDir = ADirections[lengthDir - 1]    
-    currWayx = (ANextWay[0] - xOffset) / 5
-    currWayy = (ANextWay[1] - xOffset) / 5
+    currWayx = float((ANextWay[0] - xOffset) / 5)
+    currWayy = float((ANextWay[1] - xOffset) / 5)
+    print "A*wayX" , ANextWay[0] , "A*wayY" , ANextWay[1]
+    print "currWayX" , currWayx , "currWayy" , currWayy
     nextDir = ANextDir
     nextWay = (currWayx , currWayy)
+    #publishGoal(ANextWay, ANextDir)
     publishGoal(nextWay, nextDir)
     
 #publish next way point as poseStamped

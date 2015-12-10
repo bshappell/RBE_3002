@@ -1,0 +1,21 @@
+run roscore
+
+in your home directory
+export TURTLEBOT_STAGE_WORLD_FILE=~/location on your machine of map.world
+export TURTLEBOT_STAGE_MAP_FILE=~/location on your machine of map.yaml
+rosrun map_server map_server ~/location on your machine of map.yaml
+keep it running in its own tab
+
+roslaunch turtlebot_stage launch_in_stage.launch
+in stage goto file open and open the rviz config file inside of the main src folder
+
+expand map and click the box next to topic and subscribe to /expanded_map
+expand gridcells and subscribe the topic to /gridwalls
+
+then rerun the map if necissary to make the right one show up in stage
+
+
+run obstacleCopy.py
+run optimal.py
+run the python file lab3.py
+run moveRobot.py
