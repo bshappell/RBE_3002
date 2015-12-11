@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-#What do we need in initAStar?
 
 import math 
 import numpy
@@ -38,11 +37,15 @@ def mapCallBack(data):
     global width
     global height
     global mapgrid
+    global xOffset
+    global yOffset
     mapgrid = data
     mapData = data.data
     width = data.info.width
     height = data.info.height
     res = data.info.resolution
+    xOffset = data.info.origin.position.x
+    yOffset = data.info.origin.position.y
     #print data.info # used for debugging
     #print "mapped"
     #updateWallList(mapData) # update global wall value list
@@ -517,6 +520,7 @@ def getNextWayPoint():
     global width
     global height
 
+    print 'xoffset', xOffset
     AEndGoalx = int((xClickPose + xOffset) * 5)
     AEndGoaly = int((yClickPose + yOffset) * 5)
     AWayx = int((currWayx + xOffset) * 5)
