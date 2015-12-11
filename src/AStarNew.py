@@ -81,6 +81,8 @@ def publishWalls(grid,res):
     global wallpub
     global width
     global height
+    global xOffset
+    global yOffset
     global wallList
     k=0
     cells = GridCells()
@@ -93,8 +95,8 @@ def publishWalls(grid,res):
             #print k # used for debugging
             if (grid[k] == 100):
                 point=Point()
-                point.x=j*cells.cell_width # edit for grid size
-                point.y=i*cells.cell_height # edit for grid size
+                point.x=j*cells.cell_width+xOffset # edit for grid size
+                point.y=i*cells.cell_height+yOffset # edit for grid size
                 point.z=0
                 wallList.append((j-1,i-1))
                 cells.cells.append(point)
