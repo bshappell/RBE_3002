@@ -677,6 +677,8 @@ def publishCells(grid,num):
     global ckd
     global bud
     global front
+    global xOffset
+    global yOffset
     #print "publishing"
     k=0
     cells = GridCells()
@@ -687,8 +689,8 @@ def publishCells(grid,num):
     for square in grid: #height should be set to hieght of grid
             #print k # used for debugging
             point=Point()
-            point.x=square.x*cells.cell_width+cells.cell_width # edit for grid size
-            point.y=square.y*cells.cell_height+cells.cell_width # edit for grid size
+            point.x=square.x*cells.cell_width+cells.cell_width+xOffset # edit for grid size
+            point.y=square.y*cells.cell_height+cells.cell_width+yOffset # edit for grid size
             point.z=0
             cells.cells.append(point)
 
