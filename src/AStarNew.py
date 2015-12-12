@@ -39,6 +39,7 @@ def mapCallBack(data):
     global mapgrid
     global xOffset
     global yOffset
+    global res
     mapgrid = data
     mapData = data.data
     width = data.info.width
@@ -117,8 +118,8 @@ def initAstar():
     global odom_list
     xOdom = 0
     yOdom = 0
-    xClickPose = 1
-    yClickPose = 1
+    xClickPose = 8
+    yClickPose = 8
     currWayx = 0
     currWayy = 0
     xOffset = 0
@@ -202,9 +203,9 @@ def AStar(xInit, yInit, xEnd, yEnd, AWidth, AHeight):
     unchecked = []
     wallBuddies = []
 
-    print "Awidth: ", AWidth, " AHeight: ", AHeight
-    print "xEnd: ", xEnd, " yEnd: ", yEnd
-    print "x init: ", xInit, "y init", yInit
+    #print "Awidth: ", AWidth, " AHeight: ", AHeight
+    #print "xEnd: ", xEnd, " yEnd: ", yEnd
+    #print "x init: ", xInit, "y init", yInit
 
     # determine if current position is considered to be a wall
     if(getWallVal(xInit, yInit)):
@@ -519,14 +520,20 @@ def getNextWayPoint():
     global yOffset 
     global width
     global height
+    global res
 
-    print 'xoffset', xOffset
-    AEndGoalx = int((xClickPose + xOffset) * 5)
-    AEndGoaly = int((yClickPose + yOffset) * 5)
-    AWayx = int((currWayx + xOffset) * 5)
-    AWayy = int((currWayy + yOffset) * 5)
-    ARoPosx = (xOdom + xOffset) * 5
-    ARoPosy = (yOdom + yOffset) * 5
+    print 'xoffset', xOffset , 'yoffset', yOffset
+    print 'xOdom', xOdom , 'yOdom', yOdom
+    print 'xClickPose', xClickPose , 'yClickPose', yClickPose
+    print 'height' , height , 'width' , width
+    print 'resolution' , res
+
+    AEndGoalx = int((xClickPose) / res)
+    AEndGoaly = int((yClickPose) / res)
+    AWayx = int((currWayx - xOffset) / res)
+    AWayy = int((currWayy - yOffset) / res)
+    ARoPosx = (xOdom - xOffset) / res
+    ARoPosy = (yOdom - yOffset) / res
     AWidth = width
     AHeight = height
 
@@ -540,6 +547,7 @@ def getNextWayPoint():
         AInity = int(ARoPosy)
  
     print "A* Initial X:", AInitx , "A* Initial Y:" , AInity
+    print "A* EndGoalx:", AEndGoalx , "A* EndGoaly:" , AEndGoalx
     print "A* robot Pos x" , ARoPosx, "A* robot Pos y" , ARoPosy
 
     path = AStar(AInitx, AInity, AEndGoalx, AEndGoaly, AWidth, AHeight)
@@ -551,10 +559,10 @@ def getNextWayPoint():
         print "at the goal"
         return 1
     ANextWay = AWayPoints[lengthWay - 1]
-    ANextDir = ADirections[lengthDir - 1]    
-    currWayx = float((ANextWay[0] - xOffset)) / 5
-    currWayy = float((ANextWay[1] - xOffset)) / 5
     print "A*wayX" , ANextWay[0] , "A*wayY" , ANextWay[1]
+    ANextDir = ADirections[lengthDir - 1]    
+    currWayx = float(ANextWay[0] * res) + xOffset
+    currWayy = float(ANextWay[1] * res) + xOffset
     print "currWayX" , currWayx , "currWayy" , currWayy
     nextDir = ANextDir
     nextWay = (currWayx , currWayy)
