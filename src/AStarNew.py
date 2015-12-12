@@ -5,6 +5,7 @@ import math
 import numpy
 import rospy
 import Queue
+from actionlib_msgs.msg import GoalID, GoalStatusArray
 from nav_msgs.msg import OccupancyGrid, GridCells, Path, Odometry
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist, Point, Quaternion, _Quaternion
@@ -30,6 +31,28 @@ class WallSquare:
         self.x = x
         self.y = y
         self.wallVal = wallVal
+
+#call back for move base status messages
+'''def moveBaseStatus(msg):
+
+    global activeGoal
+    global goalReached
+    global goalUnreachable
+
+    for goal in msg.status_list:
+        if goal.status < 2:
+            print "active goal Found"
+            activeGoal = goal
+            goalReached = False 
+    if len(msg.status_list) > 0 and not goalReached:
+        for goal in msg.status_list:
+            if goal.goal_id.id == activeGoal.goal_id.id:
+                if 2 <= goal.status <= 3:
+                    goalReached = True
+                elif 4 <= goal.status <= 5: 
+                    goalUnreachable = True
+                    print "error goal unreachable in A*"'''
+
 
 # reads in map data
 def mapCallBack(data):
@@ -129,10 +152,12 @@ def initAstar():
     wallList = []
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
-    wayPointPub = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=1)
+    wayPointPub = rospy.Publisher('move_base', PoseStamped, queue_size=1)
     mapsub = rospy.Subscriber('/finished', OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
     bud = rospy.Publisher('/edge', GridCells, queue_size=1)
+    # Subscribe to move base status.
+    #move_base_status = rospy.Subscriber('/move_base/status', GoalStatusArray, moveBaseStatus)
     
     odom_list = tf.TransformListener()
 
@@ -184,9 +209,11 @@ def readPose(msg):
     quat = msg.pose.orientation
     q = [quat.x, quat.y, quat.z, quat.w]
     roll, pitch, yaw = euler_from_quaternion(q)
+    global newGoalReceived
     global xClickPose
     global yClickPose
     global thetaPose
+    newGoalReceived = True
     xClickPose = msg.pose.position.x
     yClickPose = msg.pose.position.y
     #xEnd = int(px * 5) + int(width/2)
@@ -479,8 +506,6 @@ def getNeighbors(curr_x, curr_y):
 		
     return neighbors
 
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
 
 #returns list of tuples of desired path
 def reconstructPath(checked, xInit, yInit, xEnd, yEnd):
@@ -537,14 +562,8 @@ def getNextWayPoint():
     AWidth = width
     AHeight = height
 
-    if((AWayx - .5) < ARoPosx < (AWayx + .5)):
-        AInitx = AWayx
-    else:
-        AInitx = int(ARoPosx)
-    if((AWayy - .5) < ARoPosy < (AWayy + .5)):
-        AInity = AWayy
-    else:
-        AInity = int(ARoPosy)
+    AInitx = int(ARoPosx)
+    AInity = int(ARoPosy)
  
     print "A* Initial X:", AInitx , "A* Initial Y:" , AInity
     print "A* EndGoalx:", AEndGoalx , "A* EndGoaly:" , AEndGoalx
@@ -682,10 +701,10 @@ def publishCells(grid,num):
         bud.publish(cells)
 
 
-def runAstar():
+'''def runAstar():
 
     print "starting run astar"
-    # initialize astar publishes and subscribers
+    # initialize astar publishers and subscribers
     initAstar()
     
     while 1 and not rospy.is_shutdown():
@@ -702,9 +721,45 @@ def runAstar():
         #print yEnd
         #print("complete")
         #rospy.loginfo("Complete")
-        #rospy.spin() 
+        #rospy.spin() '''
 
 
+if __name__ == '__main__':
+
+    rospy.init_node('bshappell_kcorton_nkjefferson_finalA*')
+
+    initAstar()
+    
+    global xOdom
+    global yOdom
+    global xClickPose
+    global yClickPose 
+    global newGoalReceived
+
+    global goalReached
+    global goalUnreachable
+
+    newGoalReceived = False
+    goalReached = False
+    goalUnreachable = False
+
+    
 
 
+    while 1 and not rospy.is_shutdown():
+        rospy.sleep(1)
+        if((xClickPose - .5) < xOdom < (xClickPose + .5)):
+            if((yClickPose - .5) < yOdom < (yClickPose + .5)):
+                robotAtFinalGoal = True 
+        else:
+            robotAtFinalGoal = False
+
+        while(not robotAtFinalGoal):
+            if(newGoalReceived):
+                newGoalReceived = False
+                getNextWayPoint() 
+            if(goalReached):
+               getNextWayPoint()
+            if(goalUnreachable):
+                print "goal unreachable in A*" 
 
