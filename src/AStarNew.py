@@ -161,12 +161,12 @@ def initAstar():
     wallList = []
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
-    wayPointPub = rospy.Publisher('move_base', PoseStamped, queue_size=1)
+    wayPointPub = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=1)
     mapsub = rospy.Subscriber('/finished', OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
     bud = rospy.Publisher('/edge', GridCells, queue_size=1)
     # Subscribe to move base status.
-    move_base_status = rospy.Subscriber('/move_base/status', GoalStatusArray, moveBaseStatus)
+    #move_base_status = rospy.Subscriber('/move_base/status', GoalStatusArray, moveBaseStatus)
     
     odom_list = tf.TransformListener()
 
