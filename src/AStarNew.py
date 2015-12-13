@@ -33,25 +33,32 @@ class WallSquare:
         self.wallVal = wallVal
 
 #call back for move base status messages
-'''def moveBaseStatus(msg):
+def moveBaseStatus(msg):
 
     global activeGoal
     global goalReached
     global goalUnreachable
+    global notInitStartup
 
-    for goal in msg.status_list:
-        if goal.status < 2:
-            print "active goal Found"
-            activeGoal = goal
-            goalReached = False 
-    if len(msg.status_list) > 0 and not goalReached:
+    #print "move base status is called!"
+
+    if notInitStartup:
+
         for goal in msg.status_list:
-            if goal.goal_id.id == activeGoal.goal_id.id:
-                if 2 <= goal.status <= 3:
-                    goalReached = True
-                elif 4 <= goal.status <= 5: 
-                    goalUnreachable = True
-                    print "error goal unreachable in A*"'''
+            print "msg Status", goal.status
+            if goal.status < 2:
+                print "active goal Found"
+                activeGoal = goal
+                goalReached = False 
+    
+        if len(msg.status_list) > 0 and not goalReached:
+            for goal in msg.status_list:
+                if goal.goal_id.id == activeGoal.goal_id.id:
+                    if 2 <= goal.status <= 3:
+                        goalReached = True
+                    elif 4 <= goal.status <= 5: 
+                        goalUnreachable = True
+                        print "error goal unreachable in A*"
 
 
 # reads in map data
@@ -159,7 +166,7 @@ def initAstar():
     wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
     bud = rospy.Publisher('/edge', GridCells, queue_size=1)
     # Subscribe to move base status.
-    #move_base_status = rospy.Subscriber('/move_base/status', GoalStatusArray, moveBaseStatus)
+    move_base_status = rospy.Subscriber('/move_base/status', GoalStatusArray, moveBaseStatus)
     
     odom_list = tf.TransformListener()
 
@@ -215,7 +222,9 @@ def readPose(msg):
     global xClickPose
     global yClickPose
     global thetaPose
+    global notInitStartup
     newGoalReceived = True
+    notInitStartup = True
     xClickPose = msg.pose.position.x
     yClickPose = msg.pose.position.y
     #xEnd = int(px * 5) + int(width/2)
@@ -555,8 +564,8 @@ def getNextWayPoint():
     print 'height' , height , 'width' , width
     print 'resolution' , res
 
-    AEndGoalx = int((xClickPose) / res)
-    AEndGoaly = int((yClickPose) / res)
+    AEndGoalx = int((xClickPose - xOffset) / res)
+    AEndGoaly = int((yClickPose - yOffset) / res)
     AWayx = int((currWayx - xOffset) / res)
     AWayy = int((currWayy - yOffset) / res)
     ARoPosx = (xOdom - xOffset) / res
@@ -730,9 +739,7 @@ def publishCells(grid,num):
 
 if __name__ == '__main__':
 
-    rospy.init_node('bshappell_kcorton_nkjefferson_finalA*')
-
-    initAstar()
+    rospy.init_node('bshappell_kcorton_nkjefferson_finalA')
     
     global xOdom
     global yOdom
@@ -742,11 +749,14 @@ if __name__ == '__main__':
 
     global goalReached
     global goalUnreachable
+    global notInitStartup
 
     newGoalReceived = False
     goalReached = False
     goalUnreachable = False
+    notInitStartup = False
 
+    initAstar()
     
 
 
@@ -758,7 +768,10 @@ if __name__ == '__main__':
         else:
             robotAtFinalGoal = False
 
-        while(not robotAtFinalGoal):
+        print "robotAtFinalGoal" , robotAtFinalGoal
+        print "goalReached" , goalReached
+
+        while(not robotAtFinalGoal and not rospy.is_shutdown()):
             if(newGoalReceived):
                 newGoalReceived = False
                 getNextWayPoint() 
