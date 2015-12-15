@@ -39,26 +39,28 @@ def moveBaseStatus(msg):
     global goalReached
     global goalUnreachable
     global notInitStartup
+    global currentStatus
 
     #print "move base status is called!"
 
     if notInitStartup:
 
         for goal in msg.status_list:
-            print "msg Status", goal.status
+            #print "msg Status", goal.status
             if goal.status < 2:
-                print "active goal Found"
+                #print "active goal Found"
                 activeGoal = goal
                 goalReached = False 
     
         if len(msg.status_list) > 0 and not goalReached:
             for goal in msg.status_list:
                 if goal.goal_id.id == activeGoal.goal_id.id:
-                    if 2 <= goal.status <= 3:
+                    currentStatus = goal.status
+                    '''if 2 <= goal.status <= 3:
                         goalReached = True
                     elif 4 <= goal.status <= 5: 
                         goalUnreachable = True
-                        print "error goal unreachable in A*"
+                        print "error goal unreachable in A*"'''
 
 
 # reads in map data
@@ -161,7 +163,7 @@ def initAstar():
     wallList = []
     ckd = rospy.Publisher("/grid_checked", GridCells, queue_size=1)
     front = rospy.Publisher("/grid_Front", GridCells, queue_size=1)
-    wayPointPub = rospy.Publisher('move_base', PoseStamped, queue_size=1)
+    wayPointPub = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=1)
     mapsub = rospy.Subscriber('/finished', OccupancyGrid, mapCallBack)
     wallpub = rospy.Publisher("/expanded_map", GridCells, latch=True)
     bud = rospy.Publisher('/edge', GridCells, queue_size=1)
@@ -557,6 +559,7 @@ def getNextWayPoint():
     global width
     global height
     global res
+    global ANextWay
 
     print 'xoffset', xOffset , 'yoffset', yOffset
     print 'xOdom', xOdom , 'yOdom', yOdom
@@ -573,8 +576,12 @@ def getNextWayPoint():
     AWidth = width
     AHeight = height
 
-    AInitx = int(ARoPosx)
-    AInity = int(ARoPosy)
+    if ((ANextWay[0] - 1) < ARoPosx < (ANextWay[0] + 1)) and ((ANextWay[1] - 1) < ARoPosy < (ANextWay[1] + 1)):
+        AInitx = ANextWay[0]
+        AInity = ANextWay[1]
+    else:
+        AInitx = int(ARoPosx)
+        AInity = int(ARoPosy)
  
     print "A* Initial X:", AInitx , "A* Initial Y:" , AInity
     print "A* EndGoalx:", AEndGoalx , "A* EndGoaly:" , AEndGoalx
@@ -592,7 +599,7 @@ def getNextWayPoint():
     print "A*wayX" , ANextWay[0] , "A*wayY" , ANextWay[1]
     ANextDir = ADirections[lengthDir - 1]    
     currWayx = float(ANextWay[0] * res) + xOffset
-    currWayy = float(ANextWay[1] * res) + xOffset
+    currWayy = float(ANextWay[1] * res) + yOffset
     print "currWayX" , currWayx , "currWayy" , currWayy
     nextDir = ANextDir
     nextWay = (currWayx , currWayy)
@@ -751,32 +758,44 @@ if __name__ == '__main__':
     global goalUnreachable
     global notInitStartup
 
+    global currentStatus
+    global ANextWay
+
+    ANextWay = (0,0)
+
     newGoalReceived = False
     goalReached = False
     goalUnreachable = False
     notInitStartup = False
+    currentStatus = 1
 
     initAstar()
+
+    #move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+    #move_base.wait_for_server(rospy.Duration(5))
     
 
 
     while 1 and not rospy.is_shutdown():
         rospy.sleep(1)
-        if((xClickPose - .5) < xOdom < (xClickPose + .5)):
-            if((yClickPose - .5) < yOdom < (yClickPose + .5)):
+        if((xClickPose - .1) < xOdom < (xClickPose + .1)):
+            if((yClickPose - .1) < yOdom < (yClickPose + .1)):
                 robotAtFinalGoal = True 
         else:
             robotAtFinalGoal = False
 
         print "robotAtFinalGoal" , robotAtFinalGoal
         print "goalReached" , goalReached
+        print "status" , currentStatus
 
-        while(not robotAtFinalGoal and not rospy.is_shutdown()):
-            if(newGoalReceived):
+        if not robotAtFinalGoal and not rospy.is_shutdown():
+            if newGoalReceived:
                 newGoalReceived = False
                 getNextWayPoint() 
-            if(goalReached):
-               getNextWayPoint()
-            if(goalUnreachable):
+                print "getting next way 1"
+            if 2 <= currentStatus <= 3:
+                getNextWayPoint()
+                print "getting next way 2"
+            elif 4 <= currentStatus <= 5:
                 print "goal unreachable in A*" 
 
