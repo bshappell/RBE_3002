@@ -621,6 +621,20 @@ def publishGoal(location, direction):
     goal.pose.orientation = Quaternion(w, x, y, z)
     wayPointPub.publish(goal)
 
+def spin():
+    global xOdom
+    global yOdom
+
+    publishGoal((xOdom,yOdom), 0)
+    rospy.sleep(4)
+    publishGoal((xOdom,yOdom), 90)
+    rospy.sleep(4)
+    publishGoal((xOdom,yOdom), 180)
+    rospy.sleep(4)
+    publishGoal((xOdom,yOdom), 270)
+    rospy.sleep(4)
+    
+
 #locate WayPoints
 def locateWayPointsLocations(path):
 
@@ -778,7 +792,7 @@ if __name__ == '__main__':
     #move_base.wait_for_server(rospy.Duration(5))
     
 
-
+    spin()
     while 1 and not rospy.is_shutdown():
         rospy.sleep(1)
         if((xClickPose - .1) < xOdom < (xClickPose + .1)):
