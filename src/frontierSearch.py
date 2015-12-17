@@ -49,6 +49,8 @@ def runFrontierSearch():
     # continue running until all of the frontier is explored
     #while(len(frontierCells) and not rospy.is_shutdown()):
     
+    print "robo Pose x: ", roboPose_x, " roboPose_y: ", roboPose_y
+
     frontierSearch(roboPose_x, roboPose_y)
 
 
@@ -69,7 +71,7 @@ def frontierSearch(curr_x, curr_y):
 
     # BFS to find all frontier nodes
     while(len(bfsFrontier) and not rospy.is_shutdown()):
-        print "enters while loop"
+        print "enters while loop (step 0)"
 
         # get first node from the bfs frontier list
         curr_node = bfsFrontier.pop(0)
@@ -87,10 +89,12 @@ def frontierSearch(curr_x, curr_y):
 
             # check that the node has not been checked yet
             if(not listContains(checked, new_x, new_y)):
+
+                print "step 1"
             
                 #if in bounds (equal to zero less than width)
                 if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
-                    print "in bounds"
+                    print "in bounds (step 2)"
 
                     # make a new node
                     node = Node(new_x, new_y)
@@ -100,14 +104,14 @@ def frontierSearch(curr_x, curr_y):
 
                     # if it is not a wall or an unknown value
                     if((not getWallVal(new_x, new_y)) and (getClearVal(new_x, new_y))):
-                        print " appropriate wall val"
+                        print " appropriate wall val (step 3)"
                         
                         # add the node to the BFS frontier
                         bfsFrontier.append(node)
                         
                         # determine if node is on the frontier
                         if(onFrontier(node)):
-                            print "ON FRONTIERRRRR"
+                            print "ON FRONTIERRRRR (step 4)"
                             # add to the frontier list
                             frontier.append(node)
 
