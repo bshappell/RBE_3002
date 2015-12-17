@@ -1,3 +1,11 @@
+
+'''
+Authored by bshappell, nkjefferson, kcorton
+Submitted 12/17/2015
+RBE 3002
+Final Project
+'''
+
 import rospy
 import copy
 from nav_msgs.msg import OccupancyGrid

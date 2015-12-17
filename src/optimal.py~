@@ -2,6 +2,11 @@ import rospy
 import copy
 from nav_msgs.msg import OccupancyGrid
 
+
+#The purpose of this file is to convert the occupied and mapped tiles from obstacle.py
+#and reformat them to be a specific size and distance away form the object so that the robot is
+#kept at a safe distance from the obstacle.
+
 class MapOpt:
     
     def beginOpt(self, map):
@@ -14,6 +19,7 @@ class MapOpt:
     
         #for Occupancy Grid Optimization
         scale = int(round(self.robotResolution / mapRes)) #scale factor
+	#copy the map so the data in it is not altered
         newMap = copy.copy(map)
         
         newMap.info.width = int(round(mapWidth / scale, 0))

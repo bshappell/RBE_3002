@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 
 
+'''
+Authored by bshappell, nkjefferson, kcorton
+Submitted 12/17/2015
+RBE 3002
+Final Project
+'''
+
+
 import math 
 import numpy
 import rospy
@@ -86,6 +94,7 @@ def mapCallBack(data):
     publishWalls(mapgrid.data, res) # used for debugging
     print getWallVal(0,0)
 	
+#pushes the map data to the grid cell publisher in grid format
 def publishWalls(grid,res):
     #print "publishing"
     global wallpub
@@ -124,6 +133,8 @@ def publishWalls(grid,res):
     #print cells # used for debugging
     print "mapped"
     wallpub.publish(cells)           
+
+#initialize the global variables and publishers/subscribers
 
 def initAstar():
     

@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+'''
+Authored by bshappell, nkjefferson, kcorton
+Submitted 12/17/2015
+RBE 3002
+Final Project
+'''
+
 import math 
 import numpy
 import rospy
