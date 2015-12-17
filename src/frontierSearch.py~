@@ -10,6 +10,7 @@ from geometry_msgs.msg import Twist, Point, Quaternion, _Quaternion
 from kobuki_msgs.msg import BumperEvent
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import PoseStamped
+from actionlib_msgs.msg import GoalID, GoalStatusArray
 import tf
 import numpy
 import math 
@@ -33,26 +34,42 @@ def runFrontierSearch():
     global roboPose_y
     global wallList
     global clearList
+    global currentStatus
+    global x_pos
+    global y_pos
 
     # convert odometry
-    roboPose_x = (xOdom - xOffset) / res
-    roboPose_y = (yOdom - yOffset) / res
+    roboPose_x = int((xOdom - xOffset) / res)
+    roboPose_y = int((yOdom - yOffset) / res)
     
     print "LENGTH OF FRONTIER LIST: ", len(frontierCells)
     print "LENGTH OF WALL LIST: ", len(wallList)
     print "LENGTH OF CLEAR LIST: ", len(clearList)
 
     # publish the wall and clear cells
-    publishCells(wallList,2)
-    publishCells(clearList,1)
-
-    # continue running until all of the frontier is explored
-    #while(len(frontierCells) and not rospy.is_shutdown()):
-    
-    print "robo Pose x: ", roboPose_x, " roboPose_y: ", roboPose_y
 
     frontierSearch(roboPose_x, roboPose_y)
 
+    # continue running until all of the frontier is explored
+    while(len(frontierCells) and not rospy.is_shutdown()):
+    
+        publishCells(wallList,2)
+        publishCells(clearList,1)    
+
+        if 2 <= currentStatus <= 3:
+            if ((x_pos - 1) < roboPose_x < (x_pos + 1)) and ((y_pos - 1) < roboPose_x < (y_pos + 1)):
+                frontierSearch(x_pos, y_pos)
+            else:
+                frontierSearch(roboPose_x, roboPose_y)
+            print "getting next way 2"
+        elif 4 <= currentStatus <= 5:
+            print "goal unreachable" 
+            frontierSearch(roboPose_x, roboPose_y)
+
+        #print "robo Pose x: ", roboPose_x, " roboPose_y: ", roboPose_y
+
+        #frontierSearch(roboPose_x, roboPose_y)
+        print "current Status:" , currentStatus
 
 def frontierSearch(curr_x, curr_y):    
 
@@ -71,7 +88,7 @@ def frontierSearch(curr_x, curr_y):
 
     # BFS to find all frontier nodes
     while(len(bfsFrontier) and not rospy.is_shutdown()):
-        print "enters while loop (step 0)"
+        #print "enters while loop (step 0)"
 
         # get first node from the bfs frontier list
         curr_node = bfsFrontier.pop(0)
@@ -90,11 +107,11 @@ def frontierSearch(curr_x, curr_y):
             # check that the node has not been checked yet
             if(not listContains(checked, new_x, new_y)):
 
-                print "step 1"
+                #print "step 1"
             
                 #if in bounds (equal to zero less than width)
                 if 0 <= new_x and new_x < width and 0 <= new_y and new_y < height:
-                    print "in bounds (step 2)"
+                    #print "in bounds (step 2)"
 
                     # make a new node
                     node = Node(new_x, new_y)
@@ -102,24 +119,27 @@ def frontierSearch(curr_x, curr_y):
                     # add it to the checked list
                     checked.append(node)
 
+                    #print "xCoord: ", new_x, " y coord: ", new_y, " wall val: ", getWallVal(new_x, new_y)
+                    #print "xCoord: ", new_x, " y coord: ", new_y, " clear val: ", getClearVal(new_x, new_y)
+
                     # if it is not a wall or an unknown value
                     if((not getWallVal(new_x, new_y)) and (getClearVal(new_x, new_y))):
-                        print " appropriate wall val (step 3)"
+                        #print " appropriate wall val (step 3)"
                         
                         # add the node to the BFS frontier
                         bfsFrontier.append(node)
                         
                         # determine if node is on the frontier
                         if(onFrontier(node)):
-                            print "ON FRONTIERRRRR (step 4)"
+                            #print "ON FRONTIERRRRR (step 4)"
                             # add to the frontier list
                             frontier.append(node)
 
         
     # when list of all frontier nodes is calculated determine the centroids of each cluster
     #determineCentroids(frontierList)
-    for item in frontier:
-        print "frontier x: ", item.x, " frontier y: ", item.y
+    #for item in frontier:
+        #print "frontier x: ", item.x, " frontier y: ", item.y
 
     # publish frontier cells to the map
     publishCells(frontier, 0)
@@ -138,11 +158,11 @@ def onFrontier(node):
 
     hasUnexploredNeighbor = False # initailly there is no known unexplored neighbor
 
-    print " testing x: ", node.x, " testing y: ", node.y
+    #print " testing x: ", node.x, " testing y: ", node.y
 
     # check that the node is clear
     if(getClearVal(node.x, node.y)):
-        print "Is clear val"
+        #print "Is clear val"
         
         #get a list of all neighboring x and y coordiantes 
         neighbors = getNeighbors(node.x, node.y) 
@@ -244,12 +264,33 @@ def sendGoal(centroidList):
     publishGoal(closestX, closestY)
 
 #publish next way point as poseStamped
+def publishGoalSpin(location, direction):
+    
+    global wayPointPub
+    goal = PoseStamped()
+    goal.header.frame_id = 'map'
+    goal.pose.position.x = location[0]
+    goal.pose.position.y = location[1]
+    goal.pose.position.z = 0
+    (w, x, y, z) = quaternion_from_euler(0, 0, direction)
+    goal.pose.orientation = Quaternion(w, x, y, z)
+    moveRobot.publish(goal)
+
+#publish next way point as poseStamped
 def publishGoal(xPos, yPos):
     
     global moveRobot
     global xOffset
     global yOffset
     global res
+    global initStartup
+    global x_pos
+    global y_pos
+
+    x_pos = xPos
+    y_pos = yPos
+
+    initStartup = False
 
     goalX = float(xPos * res) + xOffset
     goalY = float(yPos * res) + yOffset
@@ -330,8 +371,8 @@ def getIndexPlace(listToSearch, xCoord, yCoord):
         listItem = listToSearch[i]
         if( xCoord == listItem.x and yCoord == listItem.y):
             return i
-    print "list Item Not Found" 
-    print "x: ", xCoord, " y: ", yCoord
+    #print "list Item Not Found" 
+    #print "x: ", xCoord, " y: ", yCoord
     return -10
 
 # returns true if a given list returns the given coordinates
@@ -394,6 +435,9 @@ def readOdom(msg):
     global theta
     global width
     global height
+    
+    
+    #hasOdom = True # indicate that odometry has been recieved
     # odom list wait for transform
     odom_list.waitForTransform('map', 'base_footprint', rospy.Time(0), rospy.Duration(1.0))
     (position, orientation) = odom_list.lookupTransform('map', 'base_footprint', rospy.Time(0))
@@ -445,14 +489,12 @@ def publishWalls(grid,res):
         for j in range(1,width): #height should be set to hieght of grid
             #print k # used for debugging
             if (grid[k] == 100):
-                #print "HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 point=Point()
                 point.x=j*cells.cell_width+xOffset # edit for grid size
                 point.y=i*cells.cell_height+yOffset # edit for grid size
                 point.z=0
                 wallList.append(Node(j-1,i-1))
             elif (grid[k] == 0):
-                #print "CLEAR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 point=Point()
                 point.x=j*cells.cell_width+xOffset # edit for grid size
                 point.y=i*cells.cell_height+yOffset # edit for grid size
@@ -481,7 +523,7 @@ def publishCells(grid, num):
     global wallPub
     global xOffset
     global yOffset
-    print "publishing"
+    #print "publishing"
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
@@ -504,6 +546,47 @@ def publishCells(grid, num):
     elif(num == 2):    
         wallPub.publish(cells)
 
+#call back for move base status messages
+def moveBaseStatus(msg):
+
+    global activeGoal
+    global currentStatus
+    global goalReached
+    global goalUnreachable
+    global initStartup
+
+    #print "move base status is called!"
+
+    if not initStartup:
+
+        for goal in msg.status_list:
+            #print "msg Status", goal.status
+            if goal.status < 2:
+                #print "active goal Found"
+                activeGoal = goal
+    
+        if len(msg.status_list) > 0:
+            for goal in msg.status_list:
+                if goal.goal_id.id == activeGoal.goal_id.id:
+                    currentStatus = goal.status
+                    '''if 2 <= goal.status <= 3:
+                        goalReached = True
+                    elif 4 <= goal.status <= 5: 
+                        goalUnreachable = True
+                        print "error goal unreachable in A*"'''
+
+def spin():
+    global xOdom
+    global yOdom
+
+    publishGoalSpin((xOdom,yOdom), 0)
+    rospy.sleep(4)
+    publishGoalSpin((xOdom,yOdom), 90)
+    rospy.sleep(4)
+    publishGoalSpin((xOdom,yOdom), 180)
+    rospy.sleep(4)
+    publishGoalSpin((xOdom,yOdom), 270)
+    rospy.sleep(4)
 
 # main function of program
 if __name__ == '__main__':
@@ -522,8 +605,20 @@ if __name__ == '__main__':
     global roboPose_y
     global clearPub
     global wallPub
+    global initStartup
+    global currentStatus
+    global hasOdom
+    global x_pos
+    global y_pos
+
+    
 
     # intialize global variables
+    x_pos = 0
+    y_pos = 0
+    initStartup = True
+    hasOdom = False
+    currentStatus = 0
     xOdom = 0
     yOdom = 0
     xOffset = 0
@@ -535,7 +630,7 @@ if __name__ == '__main__':
     wallList = []
     clearList = []
     frontierCells = []
-    frontierCells.append(Node(0,0))
+    #frontierCells.append(Node(0,0))
 
     # publish frontier cells to the map
     frontierPub = rospy.Publisher("/grid_frontier", GridCells, queue_size=1)
@@ -552,18 +647,22 @@ if __name__ == '__main__':
     # map subscriber
     mapsub = rospy.Subscriber('/finished', OccupancyGrid, mapCallBack)
 
+    # Subscribe to move base status.
+    move_base_status = rospy.Subscriber('/move_base/status', GoalStatusArray, moveBaseStatus)
+
     # get robot odometry
     odom_list = tf.TransformListener()
     rospy.sleep(rospy.Duration(1,0))
     rospy.Timer(rospy.Duration(0.1), readOdom) 
 
     
-
+    rospy.sleep(5)
     #makeTestMap()
-
+    spin()
     while 1 and not rospy.is_shutdown():
         print("starting")
         rospy.sleep(1)
+        
         runFrontierSearch()
         print("completed frontier search!!!!")
         rospy.loginfo("Complete")
