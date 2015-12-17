@@ -31,17 +31,25 @@ def runFrontierSearch():
     global frontierCells
     global roboPose_x
     global roboPose_y
+    global wallList
+    global clearList
 
     # convert odometry
     roboPose_x = (xOdom - xOffset) / res
     roboPose_y = (yOdom - yOffset) / res
     
     print "LENGTH OF FRONTIER LIST: ", len(frontierCells)
+    print "LENGTH OF WALL LIST: ", len(wallList)
+    print "LENGTH OF CLEAR LIST: ", len(clearList)
+
+    # publish the wall and clear cells
+    publishCells(wallList,2)
+    publishCells(clearList,1)
 
     # continue running until all of the frontier is explored
-    while(len(frontierCells) and not rospy.is_shutdown()):
+    #while(len(frontierCells) and not rospy.is_shutdown()):
     
-        frontierSearch(roboPose_x, roboPose_y)
+    frontierSearch(roboPose_x, roboPose_y)
 
 
 def frontierSearch(curr_x, curr_y):    
@@ -110,7 +118,7 @@ def frontierSearch(curr_x, curr_y):
         print "frontier x: ", item.x, " frontier y: ", item.y
 
     # publish frontier cells to the map
-    publishCells(frontier)
+    publishCells(frontier, 0)
 
     # set global variable equal to current frontier list
     frontierCells = copy.copy(frontier)
@@ -232,9 +240,15 @@ def sendGoal(centroidList):
     publishGoal(closestX, closestY)
 
 #publish next way point as poseStamped
-def publishGoal(goalX, goalY):
+def publishGoal(xPos, yPos):
     
     global moveRobot
+    global xOffset
+    global yOffset
+    global res
+
+    goalX = float(xPos * res) + xOffset
+    goalY = float(yPos * res) + yOffset
     goal = PoseStamped()
     goal.header.frame_id = 'map'
     goal.pose.position.x = goalX
@@ -274,16 +288,16 @@ def calculateCentroid(clusterList):
 def getWallVal(xVal, yVal):
     global wallList
     #print wallList
-    for set in wallList:
-        if(set[0] == xVal and set[1] == yVal):
+    for val in wallList:
+        if(val.x == xVal and val.y == yVal):
             return True
     return False
 
 # returns true if it has a "wall val of zero" and false if its a wall or unknown
 def getClearVal(xVal, yVal):
     global clearList
-    for set in clearList:
-        if(set[0] == xVal and set[1] == yVal):
+    for val in clearList:
+        if(val.x == xVal and val.y == yVal):
             return True
     return False
 
@@ -335,14 +349,15 @@ def makeTestMap():
     wallList = []
     clearList = []
 
-    wallList.append((2,5))
-    wallList.append((2,4))
+    wallList.append(Node(2,5))
+    wallList.append(Node(2,4))
 
     # add a square of clear values around start
     for x in range(2,6):
         for y in range(2,8):
-            curr_tuple = (x,y)
-            print "clear tuple: ", curr_tuple
+            curr_tuple = Node(x,y)
+            print "clear tuplex: ", curr_tuple.x , "clear tupleY: ", curr_tuple.y
+
             clearList.append(curr_tuple)
 
     testList = []
@@ -395,6 +410,7 @@ def mapCallBack(data):
     global xOffset
     global yOffset
     global res
+    print "MAPCALLBACK"
     mapgrid = data
     mapData = data.data
     width = data.info.width
@@ -425,17 +441,19 @@ def publishWalls(grid,res):
         for j in range(1,width): #height should be set to hieght of grid
             #print k # used for debugging
             if (grid[k] == 100):
+                #print "HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 point=Point()
                 point.x=j*cells.cell_width+xOffset # edit for grid size
                 point.y=i*cells.cell_height+yOffset # edit for grid size
                 point.z=0
-                wallList.append((j-1,i-1))
+                wallList.append(Node(j-1,i-1))
             elif (grid[k] == 0):
+                #print "CLEAR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 point=Point()
                 point.x=j*cells.cell_width+xOffset # edit for grid size
                 point.y=i*cells.cell_height+yOffset # edit for grid size
                 point.z=0
-                clearList.append((j-1,i-1))
+                clearList.append(Node(j-1,i-1))
             k=k+1
         k=k+1
 
@@ -444,17 +462,22 @@ def publishWalls(grid,res):
 
     #print cells # used for debugging
     print "mapped"
-    #wallpub.publish(cells) 
+    #wallPub.publish(cells) 
+    
+
 
 
 # takes in a list of nodes
 #grid is the list of points that have been checked
-def publishCells(grid):
+# 0 = frontier cells, 1 = clear cells, 2 = wall cells
+def publishCells(grid, num):
 
     global frontierPub
+    global clearPub
+    global wallPub
     global xOffset
     global yOffset
-    #print "publishing"
+    print "publishing"
     k=0
     cells = GridCells()
     cells.header.frame_id = 'map'
@@ -470,7 +493,12 @@ def publishCells(grid):
             cells.cells.append(point)
 
     #print cells # used for debugging
-    frontierPub.publish(cells)
+    if(num == 0):    
+        frontierPub.publish(cells)
+    elif(num == 1):    
+        clearPub.publish(cells)
+    elif(num == 2):    
+        wallPub.publish(cells)
 
 
 # main function of program
@@ -488,20 +516,8 @@ if __name__ == '__main__':
     global frontierCells
     global roboPose_x
     global roboPose_y
-
-    # publish frontier cells to the map
-    frontierPub = rospy.Publisher("/grid_frontier", GridCells, queue_size=1)
-
-    # publisher to publish robot driving position
-    moveRobot = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=1)
-
-    # map subscriber
-    mapsub = rospy.Subscriber('/finished', OccupancyGrid, mapCallBack)
-
-    # get robot odometry
-    odom_list = tf.TransformListener()
-    rospy.sleep(rospy.Duration(1,0))
-    rospy.Timer(rospy.Duration(0.1), readOdom) 
+    global clearPub
+    global wallPub
 
     # intialize global variables
     xOdom = 0
@@ -517,7 +533,29 @@ if __name__ == '__main__':
     frontierCells = []
     frontierCells.append(Node(0,0))
 
-    makeTestMap()
+    # publish frontier cells to the map
+    frontierPub = rospy.Publisher("/grid_frontier", GridCells, queue_size=1)
+
+    # publish clear cells to the map
+    clearPub = rospy.Publisher("/grid_frontier_clear", GridCells, queue_size=1)
+
+    # publish wall cells to the map
+    wallPub = rospy.Publisher("/grid_frontier_walls", GridCells, queue_size=1)
+
+    # publisher to publish robot driving position
+    moveRobot = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=1)
+
+    # map subscriber
+    mapsub = rospy.Subscriber('/finished', OccupancyGrid, mapCallBack)
+
+    # get robot odometry
+    odom_list = tf.TransformListener()
+    rospy.sleep(rospy.Duration(1,0))
+    rospy.Timer(rospy.Duration(0.1), readOdom) 
+
+    
+
+    #makeTestMap()
 
     while 1 and not rospy.is_shutdown():
         print("starting")

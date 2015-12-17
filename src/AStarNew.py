@@ -72,6 +72,7 @@ def mapCallBack(data):
     global xOffset
     global yOffset
     global res
+    print "MAPCALLBACK"
     mapgrid = data
     mapData = data.data
     width = data.info.width
@@ -103,6 +104,7 @@ def publishWalls(grid,res):
         for j in range(1,width): #height should be set to hieght of grid
             #print k # used for debugging
             if (grid[k] == 100):
+                #print "HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 point=Point()
                 point.x=j*cells.cell_width+xOffset # edit for grid size
                 point.y=i*cells.cell_height+yOffset # edit for grid size
